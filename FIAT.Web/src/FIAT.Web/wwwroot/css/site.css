@@ -1,0 +1,196 @@
+﻿@charset "utf-8";
+/* CSS Document */
+body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+}
+
+/* Wrapping element */
+/* Set some basic padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Set widths on the form inputs since otherwise they're 100% wide */
+input,
+select,
+textarea {
+    /*max-width: 280px;*/
+}
+
+/* Carousel */
+.carousel-caption p {
+    font-size: 20px;
+    line-height: 1.4;
+}
+
+/* Make .svg files in the carousel display properly in older browsers */
+.carousel-inner .item img[src$=".svg"]
+{
+    width: 100%;
+}
+
+/* Hide/rearrange for smaller screens */
+@media screen and (max-width: 767px) {
+  /* Hide captions */
+  .carousel-caption {
+    display: none
+  }
+}
+@media (min-width: 992px)
+{
+    .loginTop{padding-top:100px;}
+    /*.login_shuru{margin-left: 247px;}*/
+    .login_cal_pl{padding-left:20px;}
+    .login_cal_br{border-right: 1px solid #dcdcdc;width:446px;}
+    .login_more_mr40{margin-right:40px;}
+    .meng .eventlist{width: 400px;left: 50%;margin-left: -385px;}
+    .login_bg{background:url(../images/Login/loginbg.jpg) center -180px no-repeat;width: 1920px;min-height:1100px;height: 100%;background-size: 100% auto;background-color: #9C8F7F;} 
+    .findPsw{width: 525px; left: 698.5px; top: 407.5px; position: fixed;}
+    .txtCenter{text-align: center;}
+    .pl35
+    {
+        padding-left: 35px;
+    }
+    .loginbg {
+            color: #555;
+            padding: 40px 24px;
+            background: rgba(254,254,254,0.5);
+            border: solid 1px #eee;
+            box-shadow: 0 0 3px #eee;
+            text-align:center;
+            border-radius:5px;
+        }
+}
+
+@media (min-width: 768px) and (max-width: 991px)
+{
+    .loginTop{padding-top:80px;}
+    .login_shuru{margin-left: 47px;}
+    .login_cal_pl{padding-left:20px;}
+    .login_cal_br{border-right: 1px solid #dcdcdc;width:446px;}
+    .login_more_mr40{margin-right:40px;}
+    .meng .eventlist{width: 400px;left: 50%;margin-left: -385px;}
+    .login_bg{background:url(../images/Login/loginbg.jpg) center -180px no-repeat;width: 1920px;min-height:1100px;height: 100%;background-size: 100% auto;background-color: #9C8F7F;} 
+    .findPsw{width: 525px; left: 698.5px; top: 407.5px; position: fixed;}
+    .txtCenter{text-align: center;}
+    .pl35
+    {
+    }
+    .loginbg {
+            color: #555;
+            padding: 40px 24px;
+            background: rgba(254,254,254,0.5);
+            border: solid 1px #eee;
+            box-shadow: 0 0 3px #eee;
+            text-align:center;
+            border-radius:5px;
+        }
+}
+
+@media (max-width: 767px)
+{
+    .loginTop{padding-top:35px;}
+    .login_shuru{margin: 10px;}
+    .login_cal_pl{padding-left:0px;}
+    .login_cal_br{width:330px;}
+    .login_more_mr40{margin-right:0px;}
+    .meng .eventlist{width: 80%;left: 10%;margin-left: 0px;}
+    .login_bg{background:url(../images/Login/bg_login.png);background-size:auto 100% ; min-height:700px;} 
+    .findPsw{width: 85%; left: 8%; top: 30%; position: fixed;}
+    .txtCenter{padding-left: 30px;}
+    .pl35
+    {
+    }
+    .loginbg {}
+}
+.ui-jqgrid tr.jqgrow td.dotdotdot
+{
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ui-jqgrid tr.jqgrow td.dotdotdotFont
+{
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-decoration:underline;
+    cursor:pointer;
+    color:Blue;
+}
+
+
+/*Login*/
+.fl{float:left;}
+.login_logo{width: 239px;border-right: 1px solid #b5b5b5;height: 230px;padding-top: 30px;}
+/* 块状元素水平居中 */
+.auto { margin-left: auto; margin-right: auto; }
+/* 清除浮 动*/
+.fix { *zoom:1; }
+.fix:after { content:" "; display:block; height:0; clear:both; visibility:hidden; font-size:0;}
+.login_shurubt{font-size: 20px;margin-top: 7px;text-align: center;font-weight:bold;}
+.kuai{width: 10px;height: 10px;background-color: #1f4e78;display: inline-block;}
+input.login_name,input.login_mima{border-bottom-color:#A2A2A3;  width: 263px;border-left: none;border-right: none;border-top: none;padding: 10px 33px;margin: 7px 0;font-size: 14px; border-bottom-style:solid;}
+.login_name{background:url(../images/Login/login_06.png) 0 6px no-repeat;}
+.login_mima{background:url(../images/Login/login_10.png) 0 6px no-repeat;}
+button.login_yes,input.login_yes{background:url(../images/Login/login_19.png) 0 0 no-repeat;width: 120px;margin-top: 15px;height: 36px;border: none;color: #fff;font-size: 18px;line-height: 36px;}
+button.login_yes,input.login_yes:hover{background:url(../images/Login/login_17.png) 0 0 no-repeat;}
+/*.login_con{width: 663px;}*/
+.ml66{margin-left: 46px;margin-bottom: 28px;}
+.ml5 { margin-left: 5px; }
+.ml33 { margin-left: 33px; }
+.mr10 { margin-right: 10px; }
+.mr20 { margin-right: 20px; }
+.mb10 { margin-bottom: 10px; }
+.mr30 { margin-right: 30px; }
+.mr40 { margin-right: 40px; }
+.mt80 {margin-top:80px;}
+.mt60 {margin-top:60px;}
+.mt20 {margin-top:20px;}
+*:focus {outline: none;}
+
+/*Index*/
+/*右部分头部*/
+.right_bt{height: 84px;}
+.right_bt .now{padding-top:28px;padding-bottom: 30px;font-size: 20px;color: #3179b9;}
+/*首页*/
+.right_bt .time{width: 387px;font-size: 20px;color: #3179b9;}
+.db { display: block; }
+.border{width: 100%;height: 1px;background-color: #eeeeee;margin-top: 10px;}
+.fr{float:right;}
+.vw_listmore{width: 27px;}
+.vw_listmore span{background:url(../images/yuan_03.png) 0 0 no-repeat;width: 5px;height: 5px;display: inline-block;margin: 8px 2px;}
+.pt20 { padding-top: 20px; }
+.index_kbt{font-size: 22px;line-height: 29px;color: #313131;}
+input.bottombtn{background:url(../images/jian_03.png) 244px 16px no-repeat;}
+.cle{clear:both;}
+.index_tabcon span{width:410px;display:none;margin-top: 15px;}
+.index_tabcon span.tabshow{display:block;}
+.index_tabcon img{width: 338px;}
+/*通知查询内容*/
+.cx_out{border-bottom: 1px solid #e5e5e5;padding-bottom: 25px;width: 850px;}
+.cx_out ul{height: 122px;}
+.cx_inner{padding: 11px 20px 11px 10px;width:380px;margin-top: 20px;height: 78px;}
+.cx_inner:hover{background-color: #fff;box-shadow: 1px 1px 10px #d9d7d7;}
+.cx_con {width: 285px;}
+.cx_con p{font-size: 18px;color: #313131;white-space: nowrap;overflow: hidden;-o-text-overflow: ellipsis;text-overflow: ellipsis;}
+.meng,.meng1{width: 100%;height: 100%;min-height: 1200px;background:url(../images/meng_01.png) 0 0 repeat;position: fixed;left: 0;top: 0;font-size: 16px;display: none;opacity: 0;z-index: 50;}
+.meng .jingxiaoshang,.meng1 .jingxiaoshang{background-color: #fff;width: 770px;height: 461px; padding: 19px 34px;left: 50%;margin-left: -385px;top: 50%;margin-top: -460px;color: #a0a0a0;line-height:48px;}
+.meng .jingxiaoshang p,.meng1 .jingxiaoshang p{border-bottom: 1px solid #eeeeee;padding: 0 25px;}
+.meng .jingxiaoshang p span,.meng1 .jingxiaoshang p span{width: 270px;display: inline-block;}
+/*根据效果图主体宽度定义*/
+/*.container1 {width: 920px;}*/
+.s_jb{right: 0;top: 0;}
+.cx_innertime{background-color: #eeeeee;width: 75px;color: #313131;padding: 5px 0;margin-right: 20px;}
+.cx_innertime span{font-size: 42px;line-height: 46px;}
+.cx_innertime i{font-size: 14px;}
+.tc { text-align: center; }
+.cx_conxq li{float: left;width: 160px;color: #a6a6a6;}
+.abs{position:absolute}
+.logo_font_p1{font-size:16px;font-weight:bold;color:#EEE;}
+.logo_font_p2{font-size:18px;font-weight:bold;color:#EEE;margin-bottom:5px;}
+.logo_font_p3{font-size:8px;color:#666}
+.demo-iframe-holder {-webkit-overflow-scrolling: touch;overflow-y: auto;}

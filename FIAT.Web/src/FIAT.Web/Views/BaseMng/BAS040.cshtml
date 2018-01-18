@@ -1,0 +1,548 @@
+﻿@{
+    Layout = "_LayoutMenu";
+    ViewData["Title"] = "岗位目标设定";
+}
+@section HeadCss{
+    <style>
+        #selBizList.orgWidth, #selRepList.orgWidth {
+            width: 50%;
+        }
+
+        #selZionLst.orgWidth, #selAreaLst.orgWidth,
+        #selServerLst.orgWidth, #selDepartmentLst.orgWidth {
+            width: 33.3%;
+        }
+    </style>
+}
+@section Scripts{
+    <!-- 1. Load -->
+    <script type="text/javascript">
+        var _grid, _gridName;
+        $(document).ready(function () {
+            zionServerLst = '';
+            fn_Initial();
+            fn_InitialData();
+            fn_GridInit();
+        });
+    </script>
+    <!-- 2. Init -->
+    <script type="text/javascript">
+        function fn_Initial() {
+            _gridName = 'grid';
+            _grid = $('#' + _gridName);
+            $('#btnSearch').on('click', function () {
+                fn_SearchData();
+            });
+            $('#btnSave').on('click', function () {
+                fn_Save();
+            });
+            $("#selAreaLst").change(function () {
+                fn_SetServerData();
+            });
+            $("#selZionLst").change(function () {
+                fn_SetAreaData();
+            });
+            $("#selRepList").change(function () {
+                fn_SetZionData();
+            });
+            $("#selBizList").change(function () {
+                fn_SetRepData();
+            });
+            $("#btnExcelDown").on("click", function () {
+                document.getElementById("a").click();
+            });
+            $("#btnExcelUpload").on("click", function () {
+                $("#files").val("");
+                $('#files').click();
+            });
+            $("#files").change(function () {
+                $("#fileText").val($(this).val());
+                $("#upload").click();
+            });
+        }
+    </script>
+    <!-- 3. InitData -->
+    <script type="text/javascript">
+        function fn_InitialData() {
+            var baseYear = 2017;
+            var nowYear = (new Date).getFullYear();
+            var jsonYear = [];
+            for (var i = 0; i < nowYear - baseYear + 3; i++) {
+                var addYear = nowYear + i;
+                var year = { "Year": addYear, "Value": addYear };
+                jsonYear.push(year);
+            }
+            $("#selYears").html(JsonToCboList("Year", "Value", jsonYear, {}));
+
+            $.sa.get(GETORGINFO, { UserId: '@Context.Request.Cookies[SessionKeys.SESSION_USERID]' },
+              {
+                  "success": function (data) {
+                      zionServerLst = data.body;
+                      $("#selBizList").html(JsonToCboList("BName", "BId", JSON.parse(zionServerLst), { 'SelectType': 'Select' }));
+                      $("#selRepList").html(JsonToCboList("EName", "EId", null, { 'SelectType': 'Select' }));
+                      $("#selZionLst").html(JsonToCboList("QName", "QId", null, { 'SelectType': 'Select' }));
+                      $("#selAreaLst").html(JsonToCboList("AName", "AId", null, { 'SelectType': 'Select' }));
+                      $("#selServerLst").html(JsonToCboList("SName", "SId", null, { 'SelectType': 'Select' }));
+                      fn_SetRepData();
+                      fn_SetOrgControlStatus();
+                  },
+                  "failure": function (data, statusText, jqXHR) {
+                  }
+              });
+        }
+
+        function fn_SetRepData() {
+            var currentBiz = $("#selBizList").val();
+            $("#selRepList").html(JsonToCboList("EName", "EId", null, { 'SelectType': 'Select' }));
+            $("#selZionLst").html(JsonToCboList("QName", "QId", null, { 'SelectType': 'Select' }));
+            $("#selAreaLst").html(JsonToCboList("AName", "AId", null, { 'SelectType': 'Select' }));
+            $("#selServerLst").html(JsonToCboList("SName", "SId", null, { 'SelectType': 'Select' }));
+            $.each(JSON.parse(zionServerLst), function (ib, b) {
+                if (b.BId == currentBiz) {
+                    $("#selRepList").html(JsonToCboList("EName", "EId", b.RepList, { 'SelectType': 'Select' }));
+                }
+            });
+        }
+        function fn_SetZionData() {
+            var currentBiz = $("#selBizList").val();
+            var currentRep = $("#selRepList").val();
+            $("#selZionLst").html(JsonToCboList("QName", "QId", null, { 'SelectType': 'Select' }));
+            $("#selAreaLst").html(JsonToCboList("AName", "AId", null, { 'SelectType': 'Select' }));
+            $("#selServerLst").html(JsonToCboList("SName", "SId", null, { 'SelectType': 'Select' }));
+            $.each(JSON.parse(zionServerLst), function (ib, b) {
+                if (b.BId == currentBiz) {
+                    $.each(b.RepList, function (ie, e) {
+                        if (e.EId == currentRep) {
+                            $("#selZionLst").html(JsonToCboList("QName", "QId", e.ZionList, { 'SelectType': 'Select' }));
+                        }
+                    });
+                }
+            });
+        }
+        function fn_SetAreaData() {
+            var currentBiz = $("#selBizList").val();
+            var currentRep = $("#selRepList").val();
+            var currentZion = $("#selZionLst").val();
+            $("#selAreaLst").html(JsonToCboList("AName", "AId", null, { 'SelectType': 'Select' }));
+            $("#selServerLst").html(JsonToCboList("SName", "SId", null, { 'SelectType': 'Select' }));
+            $.each(JSON.parse(zionServerLst), function (ib, b) {
+                if (b.BId == currentBiz) {
+                    $.each(b.RepList, function (ie, e) {
+                        if (e.EId == currentRep) {
+                            $.each(e.ZionList, function (iq, q) {
+                                if (q.QId == currentZion) {
+                                    $("#selAreaLst").html(JsonToCboList("AName", "AId", q.AreaList, { 'SelectType': 'Select' }));
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+        function fn_SetServerData() {
+            var currentBiz = $("#selBizList").val();
+            var currentRep = $("#selRepList").val();
+            var currentZion = $("#selZionLst").val();
+            var currentArea = $("#selAreaLst").val();
+            $("#selServerLst").html(JsonToCboList("SName", "SId", null, { 'SelectType': 'Select' }));
+            $.each(JSON.parse(zionServerLst), function (ib, b) {
+                if (b.BId == currentBiz) {
+                    $.each(b.RepList, function (ie, e) {
+                        if (e.EId == currentRep) {
+                            $.each(e.ZionList, function (iq, q) {
+                                if (q.QId == currentZion) {
+                                    $.each(q.AreaList, function (ia, a) {
+                                        if (a.AId == currentArea) {
+                                            $("#selServerLst").html(JsonToCboList("SName", "SId", a.ServerList, { 'SelectType': 'Select' }));
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+        function fn_SetOrgControlStatus() {
+            var loginUserType = '@Context.Request.Cookies[SessionKeys.SESSION_USERTYPE]';
+            var OrgBizId = '@Context.Request.Cookies[SessionKeys.SESSION_ORGBIZID]';
+            var OrgRepId = '@Context.Request.Cookies[SessionKeys.SESSION_ORGREPID]';
+            var OrgZionId = '@Context.Request.Cookies[SessionKeys.SESSION_ORGZIONID]';
+            var OrgAreaId = '@Context.Request.Cookies[SessionKeys.SESSION_ORGAREAID]';
+            var OrgServerId = '@Context.Request.Cookies[SessionKeys.SESSION_ORGSERVERID]';
+
+            $("#selBizList").val("select");
+            $("#selRepList").val("select");
+            $("#selZionLst").val("select");
+            $("#selAreaLst").val("select");
+            $("#selServerLst").val("select");
+            if (loginUserType == 'A') {
+                $("#selBizList").removeAttr("disabled");
+                $("#selRepList").removeAttr("disabled");
+                $("#selZionLst").removeAttr("disabled");
+                $("#selAreaLst").removeAttr("disabled");
+                $("#selServerLst").removeAttr("disabled");
+            } else if (loginUserType == 'B') {
+                $("#selBizList").val(OrgBizId);
+                fn_SetRepData();
+                $("#selBizList").attr("disabled", "disabled");
+                $("#selRepList").removeAttr("disabled");
+                $("#selZionLst").removeAttr("disabled");
+                $("#selAreaLst").removeAttr("disabled");
+                $("#selServerLst").removeAttr("disabled");
+            } else if (loginUserType == 'E') {
+                $("#selBizList").val(OrgBizId);
+                fn_SetRepData();
+                $("#selRepList").val(OrgRepId);
+                fn_SetZionData();
+                $("#selBizList").attr("disabled", "disabled");
+                $("#selRepList").attr("disabled", "disabled");
+                $("#selZionLst").removeAttr("disabled");
+                $("#selAreaLst").removeAttr("disabled");
+                $("#selServerLst").removeAttr("disabled");
+            } else if (loginUserType == 'R') {
+                $("#selBizList").val(OrgBizId);
+                fn_SetRepData();
+                $("#selRepList").val(OrgRepId);
+                fn_SetZionData();
+                $("#selZionLst").val(OrgZionId);
+                fn_SetAreaData();
+                $("#selBizList").attr("disabled", "disabled");
+                $("#selRepList").attr("disabled", "disabled");
+                $("#selZionLst").attr("disabled", "disabled");
+                $("#selAreaLst").removeAttr("disabled");
+                $("#selServerLst").removeAttr("disabled");
+            } else if (loginUserType == 'Z') {
+                $("#selBizList").val(OrgBizId);
+                fn_SetRepData();
+                $("#selRepList").val(OrgRepId);
+                fn_SetZionData();
+                $("#selZionLst").val(OrgZionId);
+                fn_SetAreaData();
+                $("#selAreaLst").val(OrgAreaId);
+                fn_SetServerData();
+                $("#selBizList").attr("disabled", "disabled");
+                $("#selRepList").attr("disabled", "disabled");
+                $("#selZionLst").attr("disabled", "disabled");
+                $("#selAreaLst").attr("disabled", "disabled");
+                $("#selServerLst").removeAttr("disabled");
+            } else if (loginUserType == 'S') {
+                $("#selBizList").val(OrgBizId);
+                fn_SetRepData();
+                $("#selRepList").val(OrgRepId);
+                fn_SetZionData();
+                $("#selZionLst").val(OrgZionId);
+                fn_SetAreaData();
+                $("#selAreaLst").val(OrgAreaId);
+                fn_SetServerData();
+                $("#selServerLst").val(OrgServerId);
+                $("#selBizList").attr("disabled", "disabled");
+                $("#selRepList").attr("disabled", "disabled");
+                $("#selZionLst").attr("disabled", "disabled");
+                $("#selAreaLst").attr("disabled", "disabled");
+                $("#selServerLst").attr("disabled", "disabled");
+            }
+        }
+    </script>
+    <!--Save-->
+    <script type="text/javascript">
+        function fn_Save() {
+            fn_SaveCell.call(_grid);
+            var editData = _grid.getChangedCells('all');
+            if (editData.length <=0) {
+                $.sa.warning("没有需要保存的数据！");
+                return;
+            }
+            var param = { XmlData: editData, UserId: '@Context.Request.Cookies[SessionKeys.SESSION_USERID]' };
+            $.sa.confirm('是否要保存？', {
+                fnOk: function () {
+                    $(".close").click();
+                    $.sa.post(SAVEPOSTTARGETINFO, JSON.stringify(param),
+                     {
+                         "success": function (data) {
+                             if (data != null) {
+                                 $.sa.warning("保存成功！");
+                                 fn_SearchData();
+                             } else {
+                                 $.sa.warning("保存失败！");
+                             }
+                         },
+                         "failure": function (data, statusText, jqXHR) {
+                         }
+                     }
+                     , $("body"));
+                }
+            });
+        }
+    </script>
+    <!--Grid & Event-->
+    <script type="text/javascript">
+        function fn_GridInit() {
+            _grid.jqGrid({
+                datatype: 'local',
+                colModel: [
+                    {
+                        name: 'PTID', label: 'PTID', width: 30, align: 'center', hidden: true,
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    }, {
+                        name: 'SDisId', label: 'SDisId', width: 30, align: 'center', hidden: true,
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    }, {
+                        name: 'PostCode', label: 'PostCode', width: 30, align: 'center', hidden: true,
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    }, {
+                        name: 'Year', label: '年度', width: 70, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    }, {
+                        name: 'SDisName', label: '经销商名称', width: 200, align: 'left',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    }, {
+                        name: 'PostName', label: '岗位名称', width: 150, align: 'left',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    }, {
+                        name: 'Qty', label: '目标数量', width: 60, editable: true, edittype: "text", align: 'right',
+                        formatter:function(cellvalue){
+                            return fn_onlyNumber(cellvalue);
+                        }
+                    }, {
+                        name: 'UserName', label: '变更者', width: 50, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    }, {
+                        name: 'ModiDateTime', label: '变更日期', width: 80, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    }
+                ],
+                width: $('#Grid').width(),
+                height: 'auto',
+                rownumbers: true,
+                rownumWidth: 50,
+                rowNum: 15,
+                rowList: [15, 30, 100],
+                footerrow: false,
+                cellsubmit: 'clientArray',
+                pager: jQuery('#pager'),
+                cellEdit: true,
+                editurl: 'clientArray',
+                viewrecords: true,
+                gridComplete: function (id) {
+                    var rowNum = parseInt($(this).getGridParam("records"), 50);
+                    if (rowNum > 0) {
+                        $(".ui-jqgrid-sdiv").show();
+                    }
+                    else {
+                        $(".ui-jqgrid-sdiv").hide();
+                    }
+
+                    //fix the pager position
+                    $('#pager_left').css('width', '25%');
+                    $('#pager_right').css('width', '25%');
+                    $(_grid).find("input[type=checkbox][offval]").click(function () {
+                        var event = arguments[0] || window.event;
+                        $(event.target).closest('tr').addClass("edited");
+                        $(event.srcElement).closest('tr').addClass("edited");
+                    });
+
+                    $("[aria-describedby='grid_rn']").addClass("readonlycell");
+                },
+                beforeEditCell: function (rowid, cellname, v, iRow, iCol) {
+                    //var $t = $(this);
+                    //var sDisId = $t.getCell(rowid, 'SDisId');
+                    //if (sDisId != "") {
+                    //    setTimeout(function () {
+                    //        $t.restoreCell(rowid, cellname);
+                    //    }, 1);
+                    //}
+                }
+            });
+        }
+        function fn_SetGrid(mydata) {
+            mydata = mydata || [];
+            _grid.clearGridData()
+            .setGridParam({
+                data: mydata
+            }).trigger('reloadGrid');
+        }
+        function fn_SaveCell() {
+            var $t = $(this);
+            var $ecs = $(".edit-cell", $t);
+            $ecs.each(function (idx, ec) {
+                var iRow = $(ec).parent().index();
+                var iCol = $(ec).index();
+                $t.saveCell(iRow, iCol);
+            });
+        }
+    </script>
+    <!--Search-->
+    <script type="text/javascript">
+        function fn_SearchData() {
+            var disId = "";
+            if ($("#selServerLst").val() == 'select') {
+                $.sa.warning("请先选择经销商！");
+                return;
+            } else {
+                disId = $("#selServerLst").val();
+            }
+            $.sa.get(
+                GETPOSTTARGETINFO, { Year: $("#selYears").val(), DisId: disId },
+                {
+                    "success": function (data) {
+                        if (data != null) {
+                            fn_SetGrid(eval(data.body));
+                            $.sa.alert('查询完毕', { maxWidth: '400px', minWidth: '300px', showClose: false });
+                        }
+                    },
+                    "failure": function (data, statusText, jqXHR) {
+                    }
+                }
+                , $("body"));
+        }
+    </script>
+    <!--Upload-->
+    <script type="text/javascript">
+        $("#upload").click(function (evt) {
+            var fileUpload = $("#files").get(0);
+            var files = fileUpload.files;
+            var data = new FormData();
+            for (var i = 0; i < files.length ; i++) {
+                data.append(files[i].name, files[i]);
+            }
+            $.ajax({
+                type: "POST",
+                url: "/BaseMng/UploadPostTarget",
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function (result) {
+                    if (JSON.parse(result).Success == true) {
+                        fn_ExcelUpload(result);
+                    } else {
+                        $.sa.warning("上传失败,请重试.");
+                    }
+                },
+                error: function () {
+                    $.sa.warning("上传失败,请重试.");
+                }
+            });
+        });
+        function fn_ExcelUpload(obj) {
+            var postTargetList=JSON.parse(JSON.parse(obj).Result).PostTargetSetting;
+            postTargetList.splice(0,1);
+            for (var i = 0; i < postTargetList.length; i++) {
+                postTargetList[i].Qty = fn_onlyNumber(postTargetList[i].Qty);
+            }
+            var param = {UserId:@Context.Request.Cookies[SessionKeys.SESSION_USERID],XmlData:postTargetList};
+            $.sa.post(SAVEPOSTTARGETINFO,
+                          JSON.stringify(param),
+                          {
+                              "success": function (data) {
+                                  if (data != null && data.msg == "") {
+                                      $.sa.warning("上传成功！");
+                                      fn_SetGrid(eval(data.body));
+                                  } else {
+                                      $.sa.warning("上传失败！");
+                                      //fn_SetGrid("");
+                                  }
+                              },
+                              "failure": function (data, statusText, jqXHR) {
+                                  //fn_SetGrid("");
+                                  $.sa.warning(data.msg);
+                              }
+                          }, $("body"));
+        }
+    </script>
+
+    <script type="text/javascript">
+        function fn_onlyNumber(cellvalue){
+            if (cellvalue == null ) {
+                cellvalue = "";
+            }
+            var val = cellvalue.replace(/[^\d]/g,'');
+            if (val.substring(0,1) == "0") {
+                val = val.substring(1,val.length);
+            }
+            return val;
+        }
+    </script>
+}
+
+<div class="row gap-top">
+    <div class="col-md-12">
+        <span class="fa fa-flag fa-lg gap-icon"></span><span class="page-mtitle">基础设置</span><span>&nbsp;>&nbsp;</span>
+        <span class="page-title">岗位目标设定</span>
+        <div class="pull-right">
+            <button class="btn btn-primary" id="btnSearch">
+                <span class="fa fa-search gap-icon"></span>查询
+            </button>
+            <button id="btnSave" class="btn btn-primary">
+                <span class="fa fa-save gap-icon"></span>保存
+            </button>
+            <button id="btnExcelUpload" class="btn btn-primary">
+                <span class="fa fa-file-excel-o gap-icon"></span>Excel上传
+            </button>
+            <button id="btnExcelDown" class="btn btn-primary">
+                <span class="fa fa-file-excel-o gap-icon"></span>Excel模板下载
+            </button>
+            <a href="~/Template/岗位指标设定模板.xlsx" class="aline" id="a" style="display:none">Excel模板下载</a>@*PostTargetSetting*@
+        </div>
+    </div>
+</div>
+<form method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <div class="col-md-0" id="divfile">
+            <input id="files" name="files" type="file" style="display:none" />
+            <input id="fileText" type="text" class="form-control" style="display:none" />
+        </div>
+        <div class="col-md-0">
+            <input type="button" id="upload" class="btn btn-primary" value="Excel上传" style="display:none;" />
+        </div>
+    </div>
+</form>
+<div class="row gap-top">
+    <div class="col-md-5 col-sm-4">
+        <div class="input-group">
+            <span class="input-group-addon title-sm">年度</span>
+            <select class="form-control" style="width:95%" id="selYears"></select>
+        </div>
+    </div>
+    <div class="col-md-7 col-sm-6" id="divBizType">
+        <div class="input-group">
+            <span class="input-group-addon title-sm">业务类型</span>
+            <select class="form-control orgWidth" id="selBizList"></select><!--营销区，客户服务区-->
+            <select class="form-control orgWidth" id="selRepList"></select><!--大区-->
+        </div>
+    </div>
+</div>
+<div class="row gap-top">
+    <div class="col-md-12 col-sm-12">
+        <div class="input-group">
+            <span class="input-group-addon title-sm">组织结构</span>
+            <select class="form-control orgWidth" id="selZionLst"></select><!--区域-->
+            <select class="form-control orgWidth" id="selAreaLst"></select><!--小区-->
+            <select class="form-control orgWidth" id="selServerLst"></select><!--经销商-->
+        </div>
+    </div>
+</div>
+<div class="row gap-top">
+    <div id="Grid" class="col-md-12">
+        <table id="grid" class="ui-jqgrid-htable"></table>
+        <div id="pager" class="page">
+        </div>
+    </div>
+</div>
+

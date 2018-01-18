@@ -1,0 +1,1534 @@
+﻿@{
+    Layout = "_LayoutMenu";
+    ViewData["Title"] = "区域报告查询";
+}
+@section HeadCss{
+
+}
+@section Scripts{
+    <!--Excel-->
+    <script src="../js/excel/FileSaver.js"></script>
+    <script src="../js/excel/jszip.min.js"></script>
+    <script src="../js/excel/xlsx.js"></script>
+    <script src="~/js/highcharts.js"></script>
+    <!-- 1. Load -->
+    <script type="text/javascript">
+        var _userType = '@Context.Request.Cookies[SessionKeys.SESSION_USERTYPE]';
+        var _gridB, _gridBName;
+        var _gridE, _gridEName;
+        var _gridR, _gridRName;
+        var _grid, _gridName, _gridArea, _gridAreaName;
+        var _orgs, _orgb, _orge, _orgr, _orgz;
+        var _resultList, _rExcelData;
+        var searchYN = false;
+        $(document).ready(function () {
+            fn_InitControlRole();
+            fn_Initial();
+            fn_GridInit();
+        });
+    </script>
+    <!--Init-->
+    <script type="text/javascript">
+        function fn_Initial() {
+            _gridName = 'grid';
+            _grid = $('#' + _gridName);
+
+            _gridBName = 'gridB';
+            _gridB = $('#' + _gridBName);
+            _gridEName = 'gridE';
+            _gridE = $('#' + _gridEName);
+            _gridRName = 'gridR';
+            _gridR = $('#' + _gridRName);
+            _gridAreaName = 'gridarea';
+            _gridArea = $('#' + _gridAreaName);
+
+            fn_InitData();
+            fn_GridInit_B();
+            fn_GridInit_E();
+            fn_GridInit_R();
+            fn_GridInit_Area();
+            fn_GridInit();
+            fn_InitEvent();
+
+        }
+        function fn_InitData() {
+            fn_GetOrgs();
+        }
+        function fn_InitControlRole() {
+            //if (_userType == "Z")
+            //    $('#btnExcelDownloadR').hide();
+            if (_userType == "E") {
+                $("#divB").hide();
+            } else if (_userType == "R") {
+                $("#divB").hide();
+                $("#divE").hide();
+            } else if (_userType == "Z") {
+                $("#divB").hide();
+                $("#divE").hide();
+                $("divR").hide();
+            }
+        }
+    </script>
+    <!--InitEvent-->
+    <script type="text/javascript">
+        function fn_InitEvent() {
+            $("#selBranchType").change(function () {
+                var orge = $.map(_orge, function (obj) { if (obj.BId == $.trim($("#selBranchType").val())) return obj });
+                $("#selReport").html(JsonToCboList("EName", "EId", orge, { 'SelectType': 'ALL' }));
+                $("#selRegion").html(JsonToCboList("QName", "QId", [], { 'SelectType': 'ALL' }));
+                $("#selArea").html(JsonToCboList("AName", "AId", [], { 'SelectType': 'ALL' }));
+                //$("#selVType").val('0');
+                $("#selPlanTask").html(JsonToCboList("Name", "Value", "", { 'SelectType': 'SELECT' }));
+                fn_GetPlans();
+                searchYN = false;
+                var vt = $.trim($("#selVType").val());
+                if (vt == 'B') {
+                    $.sa.warning("客服区域巡检中:道路救援响应率、召回完成率系统权重为0%,总部统一打分，现场巡检总分为79分");
+                } else if (vt == 'A') {
+                    var bizId = $("#selBranchType option:selected").attr("tag");
+                    var bizTypelogin = "@Context.Request.Cookies[SessionKeys.SESSION_ORGBIZTYPE]";
+                    if (bizTypelogin == "S" || bizId == "S") {
+                        $.sa.warning("销售明检体系检核总得分为 77分");
+                    }
+                    else if (bizId == "A") {
+                        $.sa.warning("客户服务明检体系检核中：培训管理系统权重为0%，总部统一打分，现场检核总分为 98分");
+                    }
+                }
+            });
+            $("#selReport").change(function () {
+                var orgr = $.map(_orgr, function (obj) { if (obj.EId == $.trim($("#selReport").val())) return obj });
+                $("#selRegion").html(JsonToCboList("QName", "QId", orgr, { 'SelectType': 'ALL' }));
+                $("#selArea").html(JsonToCboList("AName", "AId", [], { 'SelectType': 'ALL' }));
+                //$("#selVType").val('0');
+                $("#selPlanTask").html(JsonToCboList("Name", "Value", "", { 'SelectType': 'SELECT' }));
+                fn_GetPlans();
+                searchYN = false;
+            });
+            $("#selRegion").change(function () {
+                var orgz = $.map(_orgz, function (obj) { if (obj.QId == $.trim($("#selRegion").val())) return obj });
+                $("#selArea").html(JsonToCboList("AName", "AId", orgz, { 'SelectType': 'ALL' }));
+                fn_GetPlans();
+                searchYN = false;
+            });
+            $("#selVType").change(function () {
+                var zId = $.trim($("#selArea").val());
+                var vt = $.trim($("#selVType").val());
+                fn_GetPlans();
+                searchYN = false;
+                if (vt == 'B') {
+                    $.sa.warning("客服区域巡检中:道路救援响应率、召回完成率系统权重为0%,总部统一打分，现场巡检总分为79分");
+                } else if (vt == 'A') {
+                    var bizId = $("#selBranchType option:selected").attr("tag");
+                    var bizTypelogin = "@Context.Request.Cookies[SessionKeys.SESSION_ORGBIZTYPE]";
+                    if (bizTypelogin == "S" || bizId == "S") {
+                        $.sa.warning("销售明检体系检核总得分为 77分");
+                    }
+                    else if (bizId == "A") {
+                        $.sa.warning("客户服务明检体系检核中：培训管理系统权重为0%，总部统一打分，现场检核总分为 98分");
+                    }
+                }
+            });
+
+            $("#selArea").change(function () {
+                var zId = $.trim($("#selArea").val());
+                fn_GetPlans();
+                searchYN = false;
+            });
+
+            $("#selPlanTask").change(function () {
+                searchYN = false;
+            });
+
+            $("#btnSearch").click(function () {
+                if (fn_searchValidate(true))
+                    fn_SearchMst();
+            });
+        }
+    </script>
+    <!--InitData-->
+    <script type="text/javascript">
+        function fn_GetPlans() {
+            $.sa.get(GETPLANSBYORGANIZATION, {
+                busId: $.trim($("#selBranchType").val())
+                   , repId: $.trim($("#selReport").val())
+                   , areaId: $.trim($("#selRegion").val())
+                   , zoneId: $("#selArea").val()
+                   , vType: $("#selVType").val()
+                   , status: "A"
+            },
+            {
+                "success": function (data) {
+                    if (data != null)
+                        $("#selPlanTask").html(JsonToCboList("Name", "Value", JSON.parse(data.body), { 'SelectType': 'SELECT' }));
+                    else
+                        $("#selPlanTask").html(JsonToCboList("Name", "Value", "", { 'SelectType': 'SELECT' }));
+
+                },
+                "failure": function (data, statusText, jqXHR) {
+                }
+            });
+
+        }
+        function fn_GetOrgs() {
+            $.sa.get(GETORGINFO, {
+                UserId: '@Context.Request.Cookies[SessionKeys.SESSION_USERID]'
+            },
+            {
+                "success": function (data) {
+                    _orgs = data.body;
+                    fn_SetOrgs();
+                    fn_SetOrgRole();
+                    fn_SetVType();
+                },
+                "failure": function (data, statusText, jqXHR) {
+                }
+            });
+
+        }
+    </script>
+    <!--Other-->
+    <script type="text/javascript">
+        function fn_SetOrgs() {
+            var org = eval(_orgs);
+            _orgb = org;
+            _orge = $.map(_orgb, function (obj) { return obj.RepList });
+            _orgr = $.map(_orge, function (obj) { return obj.ZionList });
+            _orgz = $.map(_orgr, function (obj) { return obj.AreaList });
+        }
+        function fn_SetOrgRole() {
+            switch (_userType) {
+                case "Z":
+                    $("#selBranchType").attr("disabled", true);
+                    $("#selReport").attr("disabled", true);
+                    $("#selRegion").attr("disabled", true);
+                    $("#selArea").attr("disabled", true);
+                    break;
+                case "R":
+                    $("#selBranchType").attr("disabled", true);
+                    $("#selReport").attr("disabled", true);
+                    $("#selRegion").attr("disabled", true);
+                    break;
+                case "E":
+                    $("#selBranchType").attr("disabled", true);
+                    $("#selReport").attr("disabled", true);
+                    break;
+                case "B":
+                    $("#selBranchType").attr("disabled", true);
+                    break;
+                default:;
+            }
+        }
+        function fn_BindBranchType(orgb, selType) {
+            var option = '';
+            if(selType=='ALL')
+                option = "<option value='0'>- 全部 -</option>";
+            $.each(orgb, function (idx, ele) {
+                option += "<option value='" + ele.BId + "' tag='" + ele.BCode + "'>" + ele.BName + "</option>";
+            });
+            $("#selBranchType").html(option);
+        }
+        function fn_SetOrgDefault() {
+            switch (_userType) {
+                case "Z":
+                    fn_BindBranchType(_orgb);
+                    //$("#selBranchType").html(JsonToCboList("BName", "BId", _orgb));
+                    $("#selReport").html(JsonToCboList("EName", "EId", _orge));
+                    $("#selRegion").html(JsonToCboList("QName", "QId", _orgr));
+                    $("#selArea").html(JsonToCboList("AName", "AId", _orgz));
+                    break;
+                case "R":
+                    fn_BindBranchType(_orgb);
+                    //$("#selBranchType").html(JsonToCboList("BName", "BId", _orgb));
+                    $("#selReport").html(JsonToCboList("EName", "EId", _orge));
+                    $("#selRegion").html(JsonToCboList("QName", "QId", _orgr));
+                    var orgz = $.map(_orgz, function (obj) { if (obj.QId == $.trim($("#selRegion").val())) return obj });
+                    $("#selArea").html(JsonToCboList("AName", "AId", orgz, { 'SelectType': 'ALL' }));
+                    break;
+                case "E":
+                    fn_BindBranchType(_orgb);
+                    //$("#selBranchType").html(JsonToCboList("BName", "BId", _orgb));
+                    $("#selReport").html(JsonToCboList("EName", "EId", _orge));
+                    var orgr = $.map(_orgr, function (obj) { if (obj.EId == $.trim($("#selReport").val())) return obj });
+                    $("#selRegion").html(JsonToCboList("QName", "QId", orgr, { 'SelectType': 'ALL' }));
+                    $("#selArea").html(JsonToCboList("AName", "AId", [], { 'SelectType': 'ALL' }));
+                    $("#selPlanTask").html(JsonToCboList("Name", "Value", "", { 'SelectType': 'SELECT' }));
+                    break;
+                case "B":
+                    fn_BindBranchType(_orgb);
+                    //$("#selBranchType").html(JsonToCboList("BName", "BId", _orgb));
+                    var orge = $.map(_orge, function (obj) { if (obj.BId == $.trim($("#selBranchType").val())) return obj });
+                    $("#selReport").html(JsonToCboList("EName", "EId", _orge, { 'SelectType': 'ALL' }));
+                    $("#selRegion").html(JsonToCboList("QName", "QId", [], { 'SelectType': 'ALL' }));
+                    $("#selArea").html(JsonToCboList("AName", "AId", [], { 'SelectType': 'ALL' }));
+                    $("#selPlanTask").html(JsonToCboList("Name", "Value", "", { 'SelectType': 'SELECT' }));
+                    break;
+                default:
+                    fn_BindBranchType(_orgb,'ALL');
+                    //$("#selBranchType").html(JsonToCboList("BName", "BId", _orgb, { 'SelectType': 'ALL' }));
+                    $("#selReport").html(JsonToCboList("EName", "EId", [], { 'SelectType': 'ALL' }));
+                    $("#selRegion").html(JsonToCboList("QName", "QId", [], { 'SelectType': 'ALL' }));
+                    $("#selArea").html(JsonToCboList("AName", "AId", [], { 'SelectType': 'ALL' }));
+                    $("#selPlanTask").html(JsonToCboList("Name", "Value", "", { 'SelectType': 'SELECT' }));
+                    break;
+            }
+            fn_GetPlans();
+        }
+        function fn_SetVType() {
+            $.sa.get(TASKGETSTATUS,
+                         { GroupCode: '09', BusId: "@Context.Request.Cookies[SessionKeys.SESSION_ORGBIZID]" },
+                         {
+                             "success": function (data) {
+                                 if (data != null) {
+                                     var jData = JSON.parse(data.body);
+                                     if (jData.length == 1) {
+                                         $('#selVType').html(JsonToCboList("Name", "Value", JSON.parse(data.body)));
+                                         $("#selVType").prop("disabled", true);
+                                         var vt = $.trim($("#selVType").val());
+                                         if (vt == 'B') {
+                                             $.sa.warning("客服区域巡检中:道路救援响应率、召回完成率系统权重为0%,总部统一打分，现场巡检总分为79分");
+                                         } else if (vt == 'A') {
+                                             var bizId = $("#selBranchType option:selected").attr("tag");
+                                            var bizTypelogin = "@Context.Request.Cookies[SessionKeys.SESSION_ORGBIZTYPE]";
+                                            if (bizTypelogin == "S" || bizId == "S") {
+                                                $.sa.warning("销售明检体系检核总得分为 77分");
+                                            }
+                                            else if(bizId=="A"){
+                                                $.sa.warning("客户服务明检体系检核中：培训管理系统权重为0%，总部统一打分，现场检核总分为 98分");
+                                            }
+                                         }
+                                     }
+                                     else {
+                                         $('#selVType').html(JsonToCboList("Name", "Value", JSON.parse(data.body), { "SelectType": "ALL" }));
+                                         $("#selVType").prop("disabled", false);
+                                     }
+                                 }
+                                 fn_SetOrgDefault();
+                             },
+                             "failure": function (data, statusText, jqXHR) {
+                                 $.sa.warning(data.msg);
+                             }
+                         });
+        }
+    </script>
+    <!--SearchMst-->
+    <script type="text/javascript">
+        function fn_SearchMst() {
+            searchYN = true;
+            var areaId = '';
+            if ($.trim($("#selArea").val()) != null && $.trim($("#selArea").val()) != undefined && $.trim($("#selArea").val()) != "0") {
+                areaId = $.trim($("#selArea").val());
+            } else if ($.trim($("#selRegion").val()) != null && $.trim($("#selRegion").val()) != undefined && $.trim($("#selRegion").val()) != "0") {
+                areaId = $.trim($("#selRegion").val());
+            } else if ($.trim($("#selReport").val()) != null && $.trim($("#selReport").val()) != undefined && $.trim($("#selReport").val()) != "0") {
+                areaId = $.trim($("#selReport").val());
+            } else {
+                areaId = $.trim($("#selBranchType").val());
+            }
+            $.sa.get(AREASCOREONTHEPLAN, { AreaId: areaId, BatchId: $.trim($("#selPlanTask").val()) },
+                   {
+                       "success": function (data) {
+                           if (data.resultCode == 0) {
+                               var resultDto = JSON.parse(data.body);
+                               var bGridData = resultDto.BStatislist;
+                               var eGridData = resultDto.EStatislist;
+                               var rGridData = resultDto.RStatislist;
+                               var zGridData = resultDto.ZStatislist;
+                               if (bGridData.length != 0 && bGridData[0].DisId != "") {
+                                   fn_SetGridB(bGridData);
+                                   $("#divB").removeClass("hidden");
+                               } else {
+                                   $("#divB").addClass("hidden");
+                               }
+                               if (eGridData.length != 0 && eGridData[0].DisId !="") {
+                                   fn_SetGridE(eGridData);
+                                   $("#divE").removeClass("hidden");
+                               } else {
+                                   $("#divE").addClass("hidden");
+                               }
+                               if (rGridData.length != 0 && rGridData[0].DisId != "") {
+                                   fn_SetGridR(rGridData);
+                                   $("#divR").removeClass("hidden");
+                               } else {
+                                   $("#divR").addClass("hidden");
+                               }
+                               fn_SetGridArea(zGridData);
+                               _resultList = resultDto.ASBEPlist;
+                               setHighChartsData([], []);
+                               if (_resultList.length == 0) {
+                                   _grid.jqGrid("clearGridData");
+                                   $.sa.alert('查询没有数据');
+                               } else {
+                                   fn_SetGrid(_resultList);
+                                   $.sa.alert('查询完毕', { maxWidth: '400px', minWidth: '300px', showClose: false });
+                               }
+                           } else {
+                               $.sa.alert(data.msg);
+                           }
+                       },
+                       "failure": function (data, statusText, jqXHR) {
+                           $.sa.warning(data.msg);
+                       }
+                   }, $("body"));
+
+        }
+    </script>
+    <!--SearchDtl-->
+    <script type="text/javascript">
+        function fn_SearchDtl(tcid,tcTitle) {
+            var data = $.map(_resultList, function (obj) { if (obj.TCId == tcid) return obj.SDisList; })
+            if (data == null || data.length == 0) {
+                $.sa.warning("没有查询到数据！");
+                setHighChartsData();
+                return;
+            }
+            var xlist = [];
+            var series = [];
+            var yData = [];
+            var tData = [];
+            for (var j = 0; j < data.length; j++) {
+                xlist.push(data[j].SDisName);
+                yData.push(parseFloat(data[j].ItemScore));
+                tData.push(parseFloat(data[j].STScore));
+            }
+            series.push({
+                name: tcTitle+'模块得分',
+                data: yData,
+                showInLegend: true
+            });
+            series.push({
+                name: '单店总得分',
+                data: tData,
+                showInLegend: true
+            });
+            $("#container").css("height", "400px");
+            if (data.length == 0) return;
+            var d = parseInt(data.length / 5);
+            if (d != 0) {
+                var h = data.length - 5;
+                $("#container").css("height", String(h * 80 + 400) + "px");
+            }
+            setHighChartsData(xlist, series);
+        }
+    </script>
+    <!--Grid-->
+    <script type="text/javascript">
+        function fn_GridInit() {
+            _grid.jqGrid({
+                datatype: 'local',
+                colModel: [
+                    {
+                        name: 'TCTitle', label: '模块', width: 180, align: 'left',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'TCScore', label: '得分', width: 60, align: 'right',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'TCWeight', label: '权重', width:80, align: 'right',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                     {
+                         name: '', label: '图表', width: 80, align: 'center',
+                         cellattr: function (rowId, val, rawObject, cm, rdata) {
+                             return 'class="readonlycell"';
+                         }, formatter: function (v, o, r) {
+                             return '<button type="button" class="btn btn-primary btn-sm"  style="width:100%;"  onclick="fn_SearchDtl(' + r.TCId + ',' + "'" + r.TCTitle + "'" + ')">详细</button>';
+                         }, unformat: function () {
+                             return 0;
+                         }
+                     },
+                    {
+                        name: 'TCId', hidden: true
+                    }
+                ],
+                width: '400px',
+                height: 'auto',
+                shrinkToFit: false,
+                //autoScroll: true,
+                rownumbers: true,
+                rownumWidth: 30,
+                rowNum: 15,
+                rowList: [15, 30, 45],
+                cellsubmit: 'clientArray',
+                pager: jQuery('#pager'),
+                cellEdit: true,
+                editurl: 'clientArray',
+                viewrecords: true,
+                multiselect: false,
+                //footerrow: true,
+                gridComplete: function (id) {
+                    var $t = $(this);
+                    var rowNum = parseInt($t.getGridParam("records"), 10);
+                    if (rowNum > 0) {
+                        $(".ui-jqgrid-sdiv").show();
+                        var frow = {
+                            'TCTitle': '合计',
+                            'TCScore': $t.getCol('TCScore', false, 'sum')
+                        };
+                        $t.footerData('set', frow);
+                    }
+                    else {
+                        $(".ui-jqgrid-sdiv").hide();
+                    }
+                    $('#pager_left').css('width', '25%');
+                    $('#pager_right').css('width', '25%');
+
+                    $("[aria-describedby='grid_rn']").addClass("readonlycell");
+                }
+            });
+        }
+        function fn_SetGrid(mydata) {
+            mydata = mydata || [];
+            _grid.clearGridData()
+            .setGridParam({
+                data: mydata
+            }).trigger('reloadGrid');
+        }
+    </script>
+
+    <!--GridArea-->
+    <script type="text/javascript">
+        function fn_GridInit_B() {
+            _gridB.jqGrid({
+                datatype: 'local',
+                colModel: [
+                    {
+                        name: 'DisName', label: '区域名称', width: 400, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    }, {
+                        name: 'DisTCount', label: '经销商总数', width: 400, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'DisCCount', label: '已完成', width: 296, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'DisNCount', label: '待完成', width: 296, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'DisProgress', label: '打分进度', width: 296, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'DisTScore', label: '总得分', width: 296, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    }
+                ],
+                width: $('#GridB').width(),
+                height: 'auto',
+                //shrinkToFit: false,
+                //autoScroll: true,
+                //rownumbers: true,
+                rownumWidth: 30,
+                //rowNum: 15,
+                //rowList: [15, 30, 45],
+                cellsubmit: 'clientArray',
+                //pager: jQuery('#pager'),
+                cellEdit: false,
+                editurl: 'clientArray',
+                viewrecords: true,
+                multiselect: false,
+                //footerrow: true,
+                gridComplete: function (id) {
+                    $("[aria-describedby='gridarea_rn']").addClass("readonlycell");
+                }
+            });
+            _gridB.jqGrid('setGroupHeaders', {
+                //useColSpanStyle: true,
+                groupHeaders: [
+                { startColumnName: 'DisName', numberOfColumns: 6, titleText: '<B>总巡检进度</B>' }
+                ]
+            });
+        }
+
+        function fn_SetGridB(mydata) {
+            mydata = mydata || [];
+            _gridB.clearGridData()
+            .setGridParam({
+                data: mydata
+            }).trigger('reloadGrid');
+        }
+
+        function fn_GridInit_E() {
+            _gridE.jqGrid({
+                datatype: 'local',
+                colModel: [
+                    {
+                        name: 'DisName', label: '区域名称', width: 400, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    }, {
+                        name: 'DisTCount', label: '经销商总数', width: 400, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'DisCCount', label: '已完成', width: 296, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'DisNCount', label: '待完成', width: 296, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'DisProgress', label: '打分进度', width: 296, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'DisTScore', label: '总得分', width: 296, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    }
+                ],
+                width: $('#GridE').width(),
+                height: 'auto',
+                //shrinkToFit: false,
+                //autoScroll: true,
+                //rownumbers: true,
+                rownumWidth: 30,
+                //rowNum: 15,
+                //rowList: [15, 30, 45],
+                cellsubmit: 'clientArray',
+                //pager: jQuery('#pager'),
+                cellEdit: false,
+                editurl: 'clientArray',
+                viewrecords: true,
+                multiselect: false,
+                //footerrow: true,
+                gridComplete: function (id) {
+                    $("[aria-describedby='gridarea_rn']").addClass("readonlycell");
+                }
+            });
+            _gridE.jqGrid('setGroupHeaders', {
+                //useColSpanStyle: true,
+                groupHeaders: [
+                { startColumnName: 'DisName', numberOfColumns: 6, titleText: '<B>大区巡检进度</B>' }
+                ]
+            });
+        }
+
+        function fn_SetGridE(mydata) {
+            mydata = mydata || [];
+            _gridE.clearGridData()
+            .setGridParam({
+                data: mydata
+            }).trigger('reloadGrid');
+        }
+
+        function fn_GridInit_R() {
+            _gridR.jqGrid({
+                datatype: 'local',
+                colModel: [
+                    {
+                        name: 'DisName', label: '区域名称', width: 400, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    }, {
+                        name: 'DisTCount', label: '经销商总数', width: 400, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'DisCCount', label: '已完成', width: 296, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'DisNCount', label: '待完成', width: 296, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'DisProgress', label: '打分进度', width: 296, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'DisTScore', label: '总得分', width: 296, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    }
+                ],
+                width: $('#GridR').width(),
+                height: 'auto',
+                //shrinkToFit: false,
+                //autoScroll: true,
+                //rownumbers: true,
+                rownumWidth: 30,
+                //rowNum: 15,
+                //rowList: [15, 30, 45],
+                cellsubmit: 'clientArray',
+                //pager: jQuery('#pager'),
+                cellEdit: false,
+                editurl: 'clientArray',
+                viewrecords: true,
+                multiselect: false,
+                //footerrow: true,
+                gridComplete: function (id) {
+                    $("[aria-describedby='gridarea_rn']").addClass("readonlycell");
+                }
+            });
+            _gridR.jqGrid('setGroupHeaders', {
+                //useColSpanStyle: true,
+                groupHeaders: [
+                { startColumnName: 'DisName', numberOfColumns: 6, titleText: '<B>区域巡检进度</B>' }
+                ]
+            });
+        }
+
+        function fn_SetGridR(mydata) {
+            mydata = mydata || [];
+            _gridR.clearGridData()
+            .setGridParam({
+                data: mydata
+            }).trigger('reloadGrid');
+        }
+
+        function fn_GridInit_Area() {
+            _gridArea.jqGrid({
+                datatype: 'local',
+                colModel: [
+                    {
+                        name: 'DisName', label: '区域名称', width: 400, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    }, {
+                        name: 'DisTCount', label: '经销商总数', width: 400, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'DisCCount', label: '已完成', width: 296, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'DisNCount', label: '待完成', width: 296, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'DisProgress', label: '打分进度', width: 296, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'DisTScore', label: '总得分', width: 296, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    }
+                ],
+                width: $('#GridArea').width(),
+                height: 'auto',
+                //shrinkToFit: false,
+                //autoScroll: true,
+                //rownumbers: true,
+                rownumWidth: 30,
+                //rowNum: 15,
+                //rowList: [15, 30, 45],
+                cellsubmit: 'clientArray',
+                //pager: jQuery('#pager'),
+                cellEdit: false,
+                editurl: 'clientArray',
+                viewrecords: true,
+                multiselect: false,
+                //footerrow: true,
+                gridComplete: function (id) {
+                    $("[aria-describedby='gridarea_rn']").addClass("readonlycell");
+                }
+            });
+            _gridArea.jqGrid('setGroupHeaders', {
+                //useColSpanStyle: true,
+                groupHeaders: [
+                { startColumnName: 'DisName', numberOfColumns: 6, titleText: '<B>小区巡检进度</B>' }
+                ]
+            });
+        }
+
+        function fn_SetGridArea(mydata) {
+            mydata = mydata || [];
+            _gridArea.clearGridData()
+            .setGridParam({
+                data: mydata
+            }).trigger('reloadGrid');
+        }
+    </script>
+
+    <!--HighChart-->
+    <script type="text/javascript">
+        function setHighChartsData(nlist, s) {
+            Highcharts.chart('container', {
+                chart: {
+                    type: 'bar'
+                },
+                title: {
+                    text: '小区内经销商得分',
+                    margin:50
+                },
+                credits: {
+                    enabled: false// 去掉官网链接
+                },
+                xAxis: {
+                    categories: nlist,
+                    crosshair: true
+                },
+                yAxis: {
+                    min: 0,
+                    max: 100,
+                    minRange: 1,
+                    title: {
+                        text: '得分'
+                    },
+                    opposite: true
+
+                },
+                colors: ['#898C8A', '#6784C1', '#f7a35c', '#8085e9', '#f15c80', '#e4d354', '#8085e8', '#8d4653', '#91e8e1'],
+                legend: {
+                    enabled: true,
+                    layout: 'vertical',
+                    floating: true,
+                    align: 'left',
+                    verticalAlign: 'top',
+                    padding: 30
+                },
+                dataLabels: {
+                    //enabled: true,
+                    //rotation: -90,
+                    //color: '#FFFFFF',
+                    //align: 'right',
+                    format: '{point.y:.2f}'
+                    //, // one decimal
+                    //y: 10, // 10 pixels down from the top
+                    //style: {
+                    //    fontSize: '13px',
+                    //    fontFamily: 'Verdana, sans-serif'
+                    //}
+                },
+                plotOptions: {
+                    bar: {
+                        pointPadding: 0.2,
+                        borderWidth: 0
+                    }
+                },
+                tooltip: {
+                    headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                    pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                    '<td style="padding:0"><b>{point.y:.2f}</b></td></tr>',
+                    footerFormat: '</table>',
+                    shared: true,
+                    useHTML: true
+                },
+                series: s
+            });
+        }
+    </script>
+    <!--btnExcel-->
+    <script type="text/javascript">
+        //$('#btnExcelDownloadA').on('click', function () {
+        //    if ($.trim($("#selArea").val()) == "" || $.trim($("#selArea").val()) == '0') {
+        //        $.sa.warning("请选择小区", {
+        //            title: "警告！", fnClose: function () {
+        //                $("#selArea").focus();
+        //            }
+        //        });
+        //        return;
+        //    }
+        //    if (!searchYN) {
+        //        $.sa.warning("您更换了查询条件，请先按条件查询出结果后再下载。", {
+        //            title: "警告！", fnClose: function () {
+        //                $("#btnSearch").focus();
+        //            }
+        //        });
+        //        return;
+        //    }
+        //    if (_resultList == undefined || _resultList == null || _resultList.length == 0)
+        //        $.sa.warning("没有可下载的数据,请先查询", {
+        //            title: "警告！", fnClose: function () {
+        //                $("#btnSearch").focus();
+        //            }
+        //        });
+        //    else
+        //        ExcelDownloadA();
+        //});
+        $('#btnExcelDownloadR').on('click', function () {
+            if (fn_searchValidate(false))
+                GetRExcelData();
+        });
+    </script>
+    <!--ExcelDownloadA-->
+    
+    <!--ExcelDownloadR-->
+    <script type="text/javascript">
+        //区域报告  下载
+        function ExcelDownloadR() {
+            var file = new xlsx.File();
+            var reportname = $("#selPlanTask>option:selected").text() + "_"
+                               + $("#selVType>option:selected").text() + "_"
+                               + ($.trim($("#selArea").val()) == 0 ? $("#selRegion>option:selected").text() : $("#selArea>option:selected").text()) + "_"
+                               + "区域报告";
+            var sheet = file.addSheet(reportname);
+
+            //设置为横向打印
+            sheet.setOrientation('landscape');
+
+            //区域报告 第一部分
+            SetExcelHeaderR(sheet);
+
+            //空行
+            setSpaceRow(sheet);
+
+            //区域报告  第二部分
+            //SetExcelOtherR(sheet, _rExcelData);
+
+            //空行
+            setSpaceRow(sheet);
+
+            //区域报告  第二部分
+            SetExcelFirstR(sheet);
+
+            //空行
+            setSpaceRow(sheet);
+
+            //
+            //区域报告  第三部分
+            SetExcelSecondR_o(sheet);
+
+            //空行
+            setSpaceRow(sheet);
+
+            //区域报告  第四部分
+            SetExcelThirdR_o(sheet);
+
+            for (var i = 0; i < 4; i++) {
+                if (i % 2 == 0)
+                    sheet.col(i).width = 10;
+                else
+                    sheet.col(i).width = 12;
+            }
+            var now = reportname + ".xlsx";
+            file
+              .saveAs('blob')
+              .then(function (content) {
+                  saveAs(content, now);
+              });
+
+        }
+
+        //区域报告  获取下载数据
+        function GetRExcelData() {
+            $.sa.get(AREASCORESONTHEPLAN,
+            { RegionId: $.trim($("#selRegion").val()), BatchId: $.trim($("#selPlanTask").val()), AreaId: $.trim($("#selArea").val()) },
+                     {
+                         "success": function (data) {
+                             if (data.resultCode == 0) {
+                                 _rExcelData = JSON.parse(data.body);
+                                 if (_rExcelData.RAPList == undefined || _rExcelData.RAPList == null || _rExcelData.RAPList.length == 0)
+                                     $.sa.warning("没有可下载的数据", {
+                                         title: "警告！", fnClose: function () {
+                                             $("#btnSearch").focus();
+                                         }
+                                     });
+                                 else
+                                     ExcelDownloadR();
+                             }
+                         },
+                         "failure": function (data, statusText, jqXHR) {
+                             $.sa.warning(data.msg);
+                         }
+                     }, $("body"));
+
+        }
+
+        //区域报告  第一部分
+        function SetExcelHeaderR(sheet) {
+            var header = sheet.addRow();
+            header.setHeightCM(1.8);
+            //header0.isCustom = true;
+            var hc = header.addCell();
+            hc.value = "区域报告";
+            setAlignStyle(hc, 'center', 'center');
+            setFontStyle(hc, 12, true, '#555555');
+            hc.hMerge = 9;
+            setborder(hc, 1, 1, 1, 1);
+
+            var h = sheet.addRow();
+            //header1.setHeightCM(1.2);
+            h.isCustom = false;
+            var hd = ['检核类型', $("#selVType>option:selected").text()
+                     , '大区', $("#selReport>option:selected").text()
+                     , '区域', $("#selRegion>option:selected").text()
+                     , '小区', $("#selArea>option:selected").text()
+                     , '巡检月份', $("#selPlanTask>option:selected").text()];
+            for (var i = 0; i < hd.length; i++) {
+                var hc = h.addCell();
+                hc.value = hd[i];
+                if (i % 2 == 0) {
+                    setAlignStyle(hc, 'center', 'center');
+                    setFontStyle(hc, 10, true, '#555555');
+                    fill(hc, 5);
+                }
+                else {
+                    setAlignStyle(hc, 'center', 'left');
+                    setFontStyle(hc, 10, false, '#555555');
+                }
+                setborder(hc, 1, 1, 1, 1);
+            }
+        }
+
+        //区域报告  第二部分
+        function FormatEDataFistR() {
+            var excelData = [];
+            var head = {
+                "SeqNo": "序号",
+                "DisName": "区域名称",
+                "DisTCount": "经销商总数",
+                "DisCCount": "已完成",
+                "DisNCount": "待完成",
+                "DisProgress": "打分进度",
+                //"DisTScore": "总得分",
+                "DType": "区域类型",
+            };
+            excelData.push(head);
+            $.each(_rExcelData.RAPList, function (x, o) {
+                var obj = {
+                    "SeqNo": x+1,
+                    "DisName": o.DisName,
+                    "DisTCount": o.DisTCount,
+                    "DisCCount": o.DisCCount,
+                    "DisNCount": o.DisNCount,
+                    "DisProgress":o.DisProgress,
+                    //"DisTScore": o.DisTScore,
+                    "DType": o.DType,
+                };
+                excelData.push(obj);
+            })
+            return excelData;
+        }
+        function SetExcelFirstR(sheet) {
+            var md = FormatEDataFistR();
+            var len = md.length;
+            if (len <= 0) return;
+            SetExcelFHeaderR(sheet, md[0]);
+            for (var i = 1; i < len; i++) {
+                var d = md[i];
+                var r = sheet.addRow();
+                r.isCustom = false;
+                var c0 = r.addCell();
+                c0.value = d.SeqNo;
+                setAlignStyle(c0, 'center', 'center');
+                setFontStyle(c0, 9, false);
+                setborder(c0, 1, 1, 1, 1);
+
+                var c1 = r.addCell();
+                c1.value = d.DisName;
+                setAlignStyle(c1, 'center', 'center');
+                setFontStyle(c1, 9, false);
+                setborder(c1, 1, 1, 1, 1);
+
+                var c2 = r.addCell();
+                c2.value = d.DType;
+                setAlignStyle(c2, 'center', 'center');
+                setFontStyle(c2, 9, false);
+                setborder(c2, 1, 1, 1, 1);
+
+                var c3 = r.addCell();
+                c3.value = d.DisTCount;
+                setAlignStyle(c3, 'center', 'center');
+                setFontStyle(c3, 9, false);
+                setborder(c3, 1, 1, 1, 1);
+
+
+                var c4 = r.addCell();
+                c4.value = d.DisCCount;
+                setAlignStyle(c4, 'center', 'center');
+                setFontStyle(c4, 9, false);
+                setborder(c4, 1, 1, 1, 1);
+
+                var c5 = r.addCell();
+                c5.value = d.DisNCount;
+                setAlignStyle(c5, 'center', 'center');
+                setFontStyle(c5, 9, false);
+                setborder(c5, 1, 1, 1, 1);
+
+                var c6 = r.addCell();
+                c6.value = d.DisProgress;
+                setAlignStyle(c6, 'center', 'center');
+                setFontStyle(c6, 9, false);
+                setborder(c6, 1, 1, 1, 1);
+            }
+        }
+        function SetExcelFHeaderR(sheet, d) {
+            var r = sheet.addRow();
+            r.isCustom = false;
+            var c0 = r.addCell();
+            c0.value = d.SeqNo;
+            setAlignStyle(c0, 'center', 'center');
+            setFontStyle(c0, 10, true);
+            fill(c0, 5);
+            setborder(c0, 1, 1, 1, 1);
+
+            var c1 = r.addCell();
+            c1.value = d.DisName;
+            setAlignStyle(c1, 'center', 'center');
+            setFontStyle(c1, 10, true);
+            fill(c1, 5);
+            setborder(c1, 1, 1, 1, 1);
+
+            var c2 = r.addCell();
+            c2.value = d.DType;
+            setAlignStyle(c2, 'center', 'center');
+            setFontStyle(c2, 10, true);
+            fill(c2, 5);
+            setborder(c2, 1, 1, 1, 1);
+
+
+
+            var c3 = r.addCell();
+            c3.value = d.DisTCount;
+            setAlignStyle(c3, 'center', 'center');
+            setFontStyle(c3, 10, true);
+            fill(c3, 5);
+            setborder(c3, 1, 1, 1, 1);
+
+
+            var c4 = r.addCell();
+            c4.value = d.DisCCount;
+            setAlignStyle(c4, 'center', 'center');
+            setFontStyle(c4, 10, true);
+            fill(c4, 5);
+            setborder(c4, 1, 1, 1, 1);
+
+
+            var c5 = r.addCell();
+            c5.value = d.DisNCount;
+            setAlignStyle(c5, 'center', 'center');
+            setFontStyle(c5, 10, true);
+            fill(c5, 5);
+            setborder(c5, 1, 1, 1, 1);
+
+
+            var c6 = r.addCell();
+            c6.value = d.DisProgress;
+            setAlignStyle(c6, 'center', 'center');
+            setFontStyle(c6, 10, true);
+            fill(c6, 5);
+            setborder(c6, 1, 1, 1, 1);
+        }
+
+        //区域报告  第三部分
+        //在用
+        var _thead;
+        function FormatEDataSecondR_o() {
+            var thead = $.map(_rExcelData.RATCList, function (x, o) { return { TCTitle: x.TCTitle, TCId: x.TCId }; });
+
+            _thead = thead.unique_o();
+            //thead.unshift("序号", "区域名称", "区域类型", "总得分");            
+
+            var arryList = [];
+            var th = $.map(_thead, function (x, o) { return x.TCTitle; });
+            th.unshift("序号", "区域名称", "区域类型", "总得分");
+            arryList.push(th);
+            $.each(_rExcelData.RAPList, function (x, obj) {
+                var sList= $.map(_thead, function (item, y) {
+                    var temp = $.map(_rExcelData.RATCList, function (z, o) { if (z.AreaId == obj.DisId && z.TCId==item.TCId) return z; });
+                    if (temp&& temp.length > 0)
+                        return temp[0].TCScore;
+                    else
+                        return "";
+                });
+                var dis = $.map(_rExcelData.RATCList, function (z, o) { if (z.AreaId == obj.DisId) return z.ATScore; });
+                sList.unshift(x + 1, obj.DisName, obj.DType, dis[0]);
+                arryList[x + 1] = sList;
+
+            });
+            return arryList;
+
+        }
+        function SetExcelSecondR_o(sheet) {
+            var md = FormatEDataSecondR_o();
+            var len = md.length;
+            if (len <= 0) return;
+            SetExcelSHeaderR_o(sheet, md[0])
+            for (var i = 1; i < len; i++) {
+                var d = md[i];
+                var r = sheet.addRow();
+                r.isCustom = false;
+                SetCellText_o(r, d[0], 9, false, 'center');
+                SetCellText_o(r, d[1], 9, false, 'center');
+                SetCellText_o(r, d[2], 9, false, 'center');
+                for (var j = 3; j < d.length; j++) {
+                    SetCellText_o(r, d[j], 9, false, 'center');
+                }
+            }
+
+        }
+        function SetExcelSHeaderR_o(sheet, d) {
+            var r = sheet.addRow();
+            r.isCustom = false;
+            for (var i = 0; i < d.length; i++) {
+                SetCellTitle_o(r, d[i], 10, true, 'center');
+            }
+        }
+
+
+        //区域报告  第四部分
+        //在用
+        var _mcount = 0;
+        function FormatEDataThirdR_o() {
+            var arryList = [];
+
+            var th=$.map(_thead, function (x, o) { return x.TCTitle; });
+            th.unshift("序号", "经销商名称", "经销商代码", "总得分");
+            arryList.push(th);
+
+            _mcount = th.length;
+
+            //经销商
+            var allDis = $.map(_rExcelData.STCList, function (item, y) {return item;});
+            var disList = allDis.unique();
+
+            var aList = _rExcelData.RAPList;
+            if(aList.length>1)aList.shift();
+            $.each(aList, function (x, obj) {
+                if (obj == undefined || obj == null) return true;
+                arryList.push(obj.DisName);
+                $.each(disList, function (y, dis) {
+                    var sList = $.map(_thead, function (tc, z) {
+                        var t= $.map(_rExcelData.STCList, function (item, j) {
+                            if (item.AreaId == obj.DisId && item.SDisId == dis.SDisId && item.TCId == tc.TCId)
+                                return item;
+                        });
+                        if (t && t.length > 0)
+                            return t[0].ItemScore
+                        else
+                            return ""
+                    });
+                    if (sList && sList.length > 0) {
+                        sList.unshift(y + 1, dis.SDisName, dis.SDisCode, dis.STScore);
+                        arryList.push(sList);
+                    }
+                });
+            });
+            return arryList;
+        }
+        function SetExcelThirdR_o(sheet) {
+            var md = FormatEDataThirdR_o();
+            var len = md.length;
+            if (len <= 0) return;
+            SetExcelTHeaderR_o(sheet, md[0])
+            for (var i = 1; i < len; i++) {
+                var d = md[i];
+                if (typeof (d) == "string") {
+                    SetAreaNameRow_o(sheet, d, _mcount - 1);
+                    continue;
+                }
+                var r = sheet.addRow();
+                r.isCustom = false;
+                for (var j = 0; j < d.length; j++) {
+                    SetCellText_o(r, d[j], 9, false, 'center');
+                }
+            }
+
+
+        }
+        function SetExcelTHeaderR_o(sheet, d) {
+            var r = sheet.addRow();
+            r.isCustom = false;
+            for (var i = 0; i < d.length; i++) {
+                SetCellTitle_o(r, d[i], 10, true, 'center');
+            }
+        }
+        function SetAreaNameRow_o(sheet, d, m) {
+            var r = sheet.addRow()
+            r.isCustom = false;
+            var rc = r.addCell();
+            rc.hMerge = m;
+            rc.value = "  >>" + d;
+            setFontStyle(rc, 9, false);
+        }
+
+        function SetAreaNameRow(sheet, d) {
+            var r = sheet.addRow()
+            r.isCustom = false;
+            var rc = r.addCell();
+            rc.hMerge = 3;
+            rc.value = "  >>" + d.SDisName;
+            setFontStyle(rc, 9, false);
+        }
+
+    </script>
+
+    <!--SearchValidate-->
+    <script type="text/javascript">
+        function fn_searchValidate(flag) {
+            var isValiE = true;
+            var isValiA = true;
+            var isValiB = true;
+            var isValiC = true;
+            var isVali = true;
+            if (!flag) {
+                if ($("#selBranchType").val() == null || $.trim($("#selBranchType").val()) == "" || $.trim($("#selBranchType").val()) == "0") {
+                    isValiA = false;
+                }
+                if ($.trim($("#selReport").val()) == "" || $.trim($("#selReport").val()) == "0") {
+                    isValiB = false;
+                }
+                if ($.trim($("#selRegion").val()) == "" || $.trim($("#selRegion").val()) == "0") {
+                    isValiC = false;
+                }
+            }
+            if ($.trim($("#selPlanTask").val()) == "" || $.trim($("#selPlanTask").val()) == "select") {
+                isValiE = false;
+            }
+
+            if (!isValiA) {
+                $.sa.warning("请选择业务类型", {
+                    title: "警告！", fnClose: function () {
+                        $("#selBranchType").focus();
+                    }
+                });
+            } else if (!isValiB) {
+                $.sa.warning("请选择大区", {
+                    title: "警告！", fnClose: function () {
+                        $("#selReport").focus();
+                    }
+                });
+            } else if (!isValiC) {
+                $.sa.warning("请选择区域", {
+                    title: "警告！", fnClose: function () {
+                        $("#selRegion").focus();
+                    }
+                });
+            }  else if (!isValiE) {
+                $.sa.warning("请选择巡检月份", {
+                    title: "警告！", fnClose: function () {
+                        $("#selPlanTask").focus();
+                    }
+                });
+            }
+            isVali = isValiA & isValiB & isValiC & isValiE;
+            return isVali;
+        }
+    </script>
+
+    <!--Common Fun-->
+    <script type="text/javascript">
+        Array.prototype.unique = function () {
+            var res = [this[0]];
+            for (var i = 1; i < this.length; i++) {
+                var repeat = false;
+                for (var j = 0; j < res.length; j++) {
+                    if (this[i].SDisId == res[j].SDisId) {
+                        repeat = true;
+                        break;
+                    }
+                }
+                if (!repeat) {
+                    res.push(this[i]);
+                }
+            }
+            return res;
+        }
+        Array.prototype.unique_o = function () {
+            var res = [this[0]];
+            for (var i = 1; i < this.length; i++) {
+                var repeat = false;
+                for (var j = 0; j < res.length; j++) {
+                    if (this[i].TCId == res[j].TCId) {
+                        repeat = true;
+                        break;
+                    }
+                }
+                if (!repeat) {
+                    res.push(this[i]);
+                }
+            }
+            return res;
+        }
+    </script>
+
+    <!--Excel Common Fun-->
+    <script type="text/javascript">
+        function setAlignStyle(cell, v, h) {
+            cell.style.align.v = v;
+            cell.style.align.h = h;
+            cell.style.align.wrapText = true;
+            cell.style.align.shrinkToFit = true;
+        }
+        function setFontStyle(cell, size, byn, c) {
+            cell.style.font.name = "微软雅黑";
+            cell.style.font.size = size;
+            cell.style.font.bold = byn;
+            cell.style.font.color = '#555555';
+        }
+        function setborder(cell, top, left, bottom, right) {
+            var light = 'ffffffff';
+            var dark = 'ff7e6a54';
+            cell.style.border.top = 'thin';//'medium'//cell.style.applyBorder = true;
+            cell.style.border.topColor = top ? dark : light;
+            cell.style.border.left = 'thin';
+            cell.style.border.leftColor = left ? dark : light;
+            cell.style.border.bottom = 'thin';
+            cell.style.border.bottomColor = bottom ? dark : light;
+            cell.style.border.right = 'thin';
+            cell.style.border.rightColor = right ? dark : light;
+        }
+        function fill(cell, type) {
+            type = type || 0;
+            var colors = ['ffffffff', 'ffa2917d', 'ffe4e2de', 'fffff8df', 'fff1eeec', '74a3d2'];
+            // 1: header, 2: first col, 3: second col, 4: gray, 0: white
+            cell.style.fill.patternType = 'solid';
+            cell.style.fill.fgColor = colors[type];
+            cell.style.fill.bgColor = 'ffffffff';
+        }
+        function setSpaceRow(sheet) {
+            var r = sheet.addRow()
+            r.isCustom = false;
+        }
+        function SetCellTitle_o(r, d, s, b, a) {
+            var c = r.addCell();
+            c.value = d;
+            setAlignStyle(c, 'center', a);
+            setFontStyle(c, s, b);
+            fill(c, 5);
+            setborder(c, 1, 1, 1, 1);
+        }
+        function SetCellText_o(r, d, s, b, a) {
+            var c = r.addCell();
+            c.value = d;
+            setAlignStyle(c, 'center', a);
+            setFontStyle(c, s, b);
+            setborder(c, 1, 1, 1, 1);
+        }
+    </script>
+}
+<div class="row gap-top">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <span class="fa fa-flag fa-lg gap-icon"></span><span class="page-mtitle">巡视检核</span><span>&nbsp;>&nbsp;</span>
+        <span class="page-title">区域报告查询</span>
+        <div class="pull-right">
+            <button class="btn btn-primary" id="btnSearch">
+                <span class="fa fa-search gap-icon"></span>查询
+            </button>
+            @*<button class="btn btn-primary hidden-xs" id="btnExcelDownloadA">
+                <span class="fa fa-file-excel-o gap-icon"></span>Excel导出(小区)
+            </button>*@
+            <button class="btn btn-primary hidden-xs" id="btnExcelDownloadR">
+                <span class="fa fa-file-excel-o gap-icon"></span>Excel导出
+            </button>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-4 col-sm-12 col-xs-12  gap-top">
+        <div class="input-group" id="distributor_id">
+            <span class="input-group-addon title-sm">业务类型</span>
+            <select class="form-control" id="selBranchType"></select>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-12 col-xs-12  gap-top">
+        <div class="input-group">
+            <span class="input-group-addon title-sm">大区</span>
+            <select class="form-control" id="selReport"></select>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-12 col-xs-12 gap-top">
+        <div class="input-group" id="distributor_id">
+            <span class="input-group-addon title-sm">区域</span>
+            <select class="form-control" id="selRegion"></select>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-4 col-sm-12 col-xs-12 gap-top">
+        <div class="input-group" id="distributor_id">
+            <span class="input-group-addon title-sm">小区</span>
+            <select class="form-control" id="selArea"></select>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-12 col-xs-12  gap-top">
+        <div class="input-group">
+            <span class="input-group-addon title-sm">检核类型</span>
+            <select class="form-control" id="selVType"></select>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-12 col-xs-12  gap-top">
+        <div class="input-group">
+            <span class="input-group-addon title-sm"><font color="red">*</font>&nbsp;巡检月份</span>
+            <select class="form-control" id="selPlanTask"></select>
+        </div>
+    </div>
+</div>
+@*<div class="row gap-top">
+        <div class="col-md-12 col-sm-12 col-xs-12"><span class="fa fa-caret-right" style="font-size:18px;"></span><span class="tableTitle">小区得分概况</span><span class="pull-right">打分进度:<span id="completeRate"></span></span></div>
+    </div>*@
+<div class="row gap-top" id="divB">
+    <div id="GridB" class="col-md-12 col-sm-12 col-xs-12 gap-top">
+        <table id="gridB" class="ui-jqgrid-htable"></table>
+    </div>
+</div>
+<div class="row gap-top" id="divE">
+    <div id="GridE" class="col-md-12 col-sm-12 col-xs-12  gap-top">
+        <table id="gridE" class="ui-jqgrid-htable"></table>
+    </div>
+</div>
+<div class="row gap-top" id="divR">
+    <div id="GridR" class="col-md-12 col-sm-12 col-xs-12  gap-top">
+        <table id="gridR" class="ui-jqgrid-htable"></table>
+    </div>
+</div>
+<div class="row gap-top">
+    <div id="GridArea" class="col-md-12 col-sm-12 col-xs-12  gap-top">
+        <table id="gridarea" class="ui-jqgrid-htable"></table>
+    </div>
+</div>
+<div class="row gap-top">
+    <div id="Grid" class="col-md-12 col-sm-12 col-xs-12">
+        <table id="grid" class="ui-jqgrid-htable"></table>
+        <div id="pager" class="page">
+        </div>
+    </div>
+</div>
+<div id="container" style="min-width: 200px; height:400px; margin: 0 auto; margin-top:50px;"></div>

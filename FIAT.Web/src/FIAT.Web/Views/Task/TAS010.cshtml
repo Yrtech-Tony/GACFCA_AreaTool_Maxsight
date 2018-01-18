@@ -1,0 +1,736 @@
+﻿@{
+    Layout = "_LayoutMenu";
+    ViewData["Title"] = "计划任务列表";
+}
+@section Scripts{
+    <style type="text/css">
+        #txtSDate.datewidth, #txtEDate.datewidth {
+            width: 48.5%;
+        }
+
+        #divfile {
+            width: 25%;
+        }
+
+        .datemargin {
+            margin-left: 3%;
+            margin-top: -1.4em;
+        }
+
+        .aline {
+            text-decoration: underline;
+            font-size: 12px;
+        }
+    </style>
+    <!-- 1. Load -->
+    <script type="text/javascript">
+        var _startDate = '@ViewBag.StartDate';
+        var _nowDate = '@ViewBag.NowDate';
+        $(document).ready(function () {
+            $('.form_datetime').datetimepicker({
+                format: "yyyy-mm-dd",
+                minView: 2,
+                autoclose: true,
+                todayBtn: true,
+                todayHighlight: 1,
+                pickerPosition: "bottom-right",
+                language: "zh-CN",
+                //endDate: _nowDate,
+                forceParse: 0
+            });
+            DateFormatCheckEvent("txtSDate");
+            DateFormatCheckEvent("txtEDate");
+            Initialize();
+            InitData();
+            $("#upload").click(function (evt) {
+                var fileUpload = $("#files").get(0);
+                var files = fileUpload.files;
+                var data = new FormData();
+                for (var i = 0; i < files.length ; i++) {
+                    data.append(files[i].name, files[i]);
+                }
+                $.ajax({
+                    type: "POST",
+                    url: "/Task/UploadPlansAjax",
+                    contentType: false,
+                    processData: false,
+                    data: data,
+                    success: function (message) {
+                        // alert(message);
+                        if (JSON.parse(message).Success == true) {
+                            fn_ExcelUpload(message);
+                            //$.sa.warning("上传成功");
+                        } else {
+                            $.sa.warning("上传失败,请重试.");
+                        }
+                    },
+                    error: function () {
+                        $.sa.warning("上传失败,请重试.");
+                    }
+                });
+            });
+            $("#uploadforupdate").click(function (evt) {
+                var fileUpload = $("#filesforupdate").get(0);
+                var files = fileUpload.files;
+                var data = new FormData();
+                for (var i = 0; i < files.length ; i++) {
+                    data.append(files[i].name, files[i]);
+                }
+                $.ajax({
+                    type: "POST",
+                    url: "/Task/UploadPlansAjaxForUpdate",
+                    contentType: false,
+                    processData: false,
+                    data: data,
+                    success: function (message) {
+                        // alert(message);
+                        if (JSON.parse(message).Success == true) {
+                            fn_ExcelUploadForUpdate(message);
+                            //$.sa.warning("上传成功");
+                        } else {
+                            $.sa.warning("上传失败,请重试.");
+                        }
+                    },
+                    error: function () {
+                        $.sa.warning("上传失败,请重试.");
+                    }
+                });
+            });
+        });
+    </script>
+
+    <!-- 2. Init -->
+    <script type="text/javascript">
+        function Initialize() {
+            fn_GridInit();
+            var width = $("div.ui-jqgrid-bdiv").width();
+            $("div.ui-jqgrid-sdiv").css("width", width);
+            $("#btnSearch").on("click", function () {
+                fn_Search();
+            });
+            $("#btnCreate").on("click", function () {
+                fn_Create();
+            });
+            $("#files").change(function () {
+                $("#fileText").val($(this).val());
+                $("#upload").click();
+            });
+            $("#btnExcelUpload").on("click",function(){
+                $("#files").val("");
+                $('#files').click();
+            });
+            $("#btnExcelDown").on("click",function(){
+                //location.href = "~/Template/Score.xlsx";
+                document.getElementById("a").click();
+            });
+            //近期指标得分--Modify by dong.limin 2017-7-17 13:17:12
+            $("#filesforupdate").change(function () {
+                $("#fileTextforupdate").val($(this).val());
+                $("#uploadforupdate").click();
+            });
+            $("#btnExcelUploadForUpdate").on("click",function(){
+                $("#filesforupdate").val("");
+                $('#filesforupdate').click();
+            });
+            $("#btnExcelDownForUpdate").on("click",function(){
+                fn_downloadExcel();
+            });
+
+            var loginUserType = '@Context.Request.Cookies[SessionKeys.SESSION_USERTYPE]';
+            if (loginUserType == 'R') {
+                $("#btnCreate").show();
+                $("#btnExcelUpload").show();
+                $("#btnExcelDown").show();
+            }else{
+                $("#btnCreate").hide();
+                $("#btnExcelUpload").hide();
+                $("#btnExcelDown").hide();
+            }
+            if (loginUserType == 'A') {
+                $("#btnExcelUploadForUpdate").show();
+                $("#btnExcelDownForUpdate").show();
+            }else{
+                $("#btnExcelUploadForUpdate").hide();
+                $("#btnExcelDownForUpdate").hide();
+            }
+        }
+
+        function InitData() {
+            $('#txtSDate').val(_startDate);
+            $('#txtEDate').val(_nowDate);
+            fn_initStatus();
+            //fn_initsourceType();
+        }
+    </script>
+    <!-- 3. Validate -->
+    <script type="text/javascript">
+    </script>
+    <!-- 4. Custom Function -->
+    <script type="text/javascript">
+        function fn_initStatus() {
+            // $.sa.get('http://fiatqaapi.elandcloud.com/fiat/api/v1/PlanTask/GetStatus',
+            $.sa.get(TASKGETSTATUS,
+                       { GroupCode: '09',BusId:"@Context.Request.Cookies[SessionKeys.SESSION_ORGBIZID]"},
+                       {
+                           "success": function (data) {
+                               if (data != null) {
+                                   var jData=JSON.parse(data.body);
+                                   if (jData.length ==1) {
+                                       $('#selStatus').html(JsonToCboList("Name", "Value", JSON.parse(data.body)));
+                                       $("#selStatus").prop("disabled",true);
+                                   }
+                                   else{
+                                       $('#selStatus').html(JsonToCboList("Name", "Value", JSON.parse(data.body), { "SelectType": "ALL" }));
+                                       $("#selStatus").prop("disabled",false);
+                                   }
+
+                               }
+                           },
+                           "failure": function (data, statusText, jqXHR) {
+                               $.sa.warning(data.msg);
+                           }
+                       });
+        }
+        function fn_initsourceType() {
+            //$.sa.get('http://fiatqaapi.elandcloud.com/fiat/api/v1/PlanTask/GetStatus',
+            $.sa.get(TASKGETSTATUS,
+                           { GroupCode: '15' },
+                           {
+                               "success": function (data) {
+                                   if (data != null) {
+                                       $('#selsourceType').html(JsonToCboList("Name", "Value", JSON.parse(data.body), { "SelectType": "ALL" }));
+                                       //$.sa.warning(data.body);
+                                   }
+                               },
+                               "failure": function (data, statusText, jqXHR) {
+                                   $.sa.warning(data.msg);
+                               }
+                           });
+        }
+        function fn_Search() {
+            var sdate = $("#txtSDate").val().replace(/\-/gi, '');
+            var edate = $("#txtEDate").val().replace(/\-/gi, '');
+            if (sdate > edate) {
+                $.sa.warning("结束时间不能在开始时间之前");
+                return;
+            }
+            var title = $("#txtTitle").val();
+            var type = $("#selStatus").val();
+            var sourceType=$("#selsourceType").val();
+            //$.sa.get('http://localhost:6505/fiat/api/v1/PlanTask/GetPlansList',
+            $.sa.get(TASKGETPLANSLIST,
+                          { Title: title, VisitType: type, SDate: sdate, EDate: edate, UserId: '@Context.Request.Cookies[SessionKeys.SESSION_USERID]',SourceType:sourceType },
+                          {
+                              "success": function (data) {
+                                  if (data != null && JSON.parse(data.body).length>0) {
+                                      //$('#selStatus').html(JsonToCboList("Name", "Code", JSON.parse(data.body), { "SelectType": "ALL" }));
+                                      fn_SetGrid(JSON.parse(data.body));
+                                  } else {
+                                      $.sa.warning("没有查询到数据！");
+                                      fn_SetGrid("");
+                                  }
+                              },
+                              "failure": function (data, statusText, jqXHR) {
+                                  fn_SetGrid("");
+                                  $.sa.warning(data.msg);
+                              }
+                          }, $("body"));
+        }
+        function fn_GetPlanDetail(obj) {
+            var rowData = $('#gridTaskPlans').getRowData(obj);
+            $.sa.pop('/Task/TAS021P', {
+                height:'520px',width:950, title: '<span class="fa fa-hand-o-right gap-icon-right"></span><span>计划任务详细</span>',
+                params: {
+                    PId: rowData.Id,
+                    PStatus: rowData.PStatus
+                }
+               , popcallback: function (msg) {
+                   if (msg != null && msg.length > 0) {
+                       fn_Search();
+                       $.sa.warning("修改成功！");
+                   }
+               }
+            });
+        }
+        function fn_Push(obj) {
+            //alert(obj);
+            /* var item = { Id:obj,UserId:'@Context.Request.Cookies[SessionKeys.SESSION_USERID]' }
+            //$.sa.post('http://localhost:6505/fiat/api/v1/PlanTask/PlansPush',
+            /*$.sa.post(PLANSPUSH,
+                       JSON.stringify(item),
+                       {
+                           "success": function (data) {
+                                   $.sa.warning("推送经销商通知成功！");
+                                   //fn_SetGrid("");
+                           },
+                           "failure": function (data, statusText, jqXHR) {
+                               //fn_SetGrid("");
+                               $.sa.warning(data.msg);
+                           }
+                       }, $("body"));*/
+
+            $.sa.pop('/Task/TAS012P', {
+                height:600,width:500, title: '<span class="fa fa-hand-o-right gap-icon-right"></span><span>推送方式</span>',
+                params: {
+                    PId:obj
+                }
+           , popcallback: function (msg) {
+               if (msg != null && msg.length > 0) {
+                   fn_Search();
+                   $.sa.warning("推送成功！");
+               }
+           }
+            });
+        }
+        function fn_Create() {
+            location.href = '@Url.Action("TAS020","Task")';
+        }
+        function fn_ExcelUpload(obj) {
+            var plans=JSON.parse(JSON.parse(obj).Result).Plans;
+            var taskofplans=JSON.parse(JSON.parse(obj).Result).TaskOfPlans;
+            plans.splice(0,1);
+            taskofplans.splice(0,1);
+            var item = {InUserId:@Context.Request.Cookies[SessionKeys.SESSION_USERID],Plans:plans,TaskOfPlans:taskofplans,TaskCard:JSON.parse(JSON.parse(obj).Result).TaskCard
+            ,TaskItem:JSON.parse(JSON.parse(obj).Result).TaskItem,CheckStandard:JSON.parse(JSON.parse(obj).Result).CheckStandard,Score:JSON.parse(JSON.parse(obj).Result).Score,CheckResult:JSON.parse(JSON.parse(obj).Result).CheckResult,PictureStandard:JSON.parse(JSON.parse(obj).Result).PictureStandard};
+            // $.sa.post('http://localhost:6505/fiat/api/v1/PlanTask/ExcelUploadPlans',
+            $.sa.post(EXCELUPLOADPLANS,
+                          JSON.stringify(item),
+                          {
+                              "success": function (data) {
+                                  if (data != null && data.msg == "") {
+                                      $.sa.warning("保存成功！");
+                                      //fn_ClosePlan();
+                                  } else {
+                                      $.sa.warning("保存失败！");
+                                      //fn_SetGrid("");
+                                  }
+                              },
+                              "failure": function (data, statusText, jqXHR) {
+                                  //fn_SetGrid("");
+                                  $.sa.warning(data.msg);
+                              }
+                          }, $("body"));
+        }
+        function fn_ExcelUploadForUpdate(obj) {
+            var rData=JSON.parse(JSON.parse(obj).Result);
+            var pScore=rData.LastPScore;
+            pScore.splice(0,1);
+            var tcScore=rData.LastTCScore;
+            tcScore.splice(0,1);
+            var tiScore=rData.LastTIScore;
+            tiScore.splice(0,1);
+            var item = {InUserId:@Context.Request.Cookies[SessionKeys.SESSION_USERID],LastPScore:pScore,LastTCScore:tcScore,LastTIScore:tiScore};
+            $.sa.post(EXCELUPLOADPLANSFORUPDATE,
+                          JSON.stringify(item),
+                          {
+                              "success": function (data) {
+                                  if (data != null && data.msg == "") {
+                                      $.sa.warning("保存成功！");
+                                      //fn_ClosePlan();
+                                  } else {
+                                      $.sa.warning("保存失败！");
+                                      //fn_SetGrid("");
+                                  }
+                              },
+                              "failure": function (data, statusText, jqXHR) {
+                                  //fn_SetGrid("");
+                                  $.sa.warning(data.msg);
+                              }
+                          }, $("body"));
+        }
+    </script>
+    <!-- 5. Grid -->
+    <script type="text/javascript">
+        function fn_GridInit() {
+            $('#gridTaskPlans').jqGrid({
+                datatype: 'local',
+                colModel: [
+                    {
+                        name: 'Id', label: '计划任务Id', width: 80, align: 'center', hidden: false,
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'Title', label: '计划任务标题', width: 210, align: 'left',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'Name', label: '经销商名称', width: 178, align: 'left',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'LastPScore', label: '近期明检总分', width: 90, align: 'right',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'VisitDateTime', label: '检核时间', width: 90, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'VisitTypeName', label: '检核类型', width: 150, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'SourceName', label: '检核类别', width: 80, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        },hidden:true
+                    },
+                    {
+                        name: 'LastDate', label: '最近更新时间', width: 90, align: 'center',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                     {
+                         name: 'PStatusName', label: '状态', width: 60, align: 'center',
+                         cellattr: function (rowId, val, rawObject, cm, rdata) {
+                             return 'class="readonlycell"';
+                         }
+                     },
+                     {
+                         name: 'Rate', label: '完成率', width: 60, align: 'center',
+                         cellattr: function (rowId, val, rawObject, cm, rdata) {
+                             return 'class="readonlycell"';
+                         },
+                         formatter:function(v, o, r) {
+                             if (r.Totle == "0") {
+                                 return 0
+                             } else {
+                                 return r.Complete + "/" + r.Totle;
+                             }
+
+                         }, unformat:function(v,o,r){
+                             return 0;
+                         }
+                     },
+                     {
+                         name: 'Rate', label: '推送经销商通知', width: 120, align: 'center',
+                         cellattr: function (rowId, val, rawObject, cm, rdata) {
+                             return 'class="readonlycell"';
+                         }, formatter: function (v, o, r) {
+                             if (r.PStatus=="P") {
+                                 return '<button type="button" class="btn btn-primary btn-sm"  style="width:100%;"  onclick="fn_Push(' + r.Id + ')">推送经销商通知</button>';
+                             }else{
+                                 return '<button type="button" class="btn btn-primary btn-sm"  style="width:100%;" disabled  onclick="fn_Push(' + r.Id + ')">推送经销商通知</button>';
+                             }
+                         }, unformat: function () {
+                             return 0;
+                         }, hidden: true
+                     },
+                     {
+                         name: 'Rate', label: '详细', width: 70, align: 'center',
+                         cellattr: function (rowId, val, rawObject, cm, rdata) {
+                             return 'class="readonlycell"';
+                         }, formatter: function (v,o,r) {
+                             return '<button type="button" class="btn btn-primary btn-sm"  style="width:100%;"  onclick="fn_GetPlanDetail(' + o.rowId + ')">详细</button>';
+                         }, unformat: function () {
+                             return 0;
+                         }
+                     },
+                     {
+                         name: 'VisitType', label: 'VisitType', width: 103, align: 'center', hidden: true
+                     },
+                     {
+                         name: 'PStatus', label: 'PStatus', width: 103, align: 'center', hidden: true
+                     },
+                     {
+                         name: 'Totle', label: 'Totle', width: 103, align: 'center', hidden: true
+                     },
+                     {
+                         name: 'Complete', label: 'Complete', width: 103, align: 'center', hidden: true
+                     },
+                     {
+                         name: 'SourceCode', label: 'SourceCode', width: 103, align: 'center', hidden: true
+                     }
+                ],
+                width: $('#Grid').width(),
+                shrinkToFit:false,
+                height: 'auto',
+                rownumbers: true,
+                rownumWidth: 50,
+                rowNum: 15,
+                rowList: [15, 30, 45],
+                footerrow: false,
+                cellsubmit: 'clientArray',
+                pager: jQuery('#pager'),
+                cellEdit: true,
+                editurl: 'clientArray',
+                viewrecords: true,
+                //autoScroll: false,
+                gridComplete: function (id) {
+                    var rowNum = parseInt($(this).getGridParam("records"), 50);
+                    if (rowNum > 0) {
+                        $(".ui-jqgrid-sdiv").show();
+                    }
+                    else {
+                        $(".ui-jqgrid-sdiv").hide();
+                        //                    ShowNoDataDiv("grid","msg","没有数据");
+                    }
+
+                    //fix the pager position
+                    $('#pager_left').css('width', '25%');
+                    $('#pager_right').css('width', '25%');
+
+                    $("[aria-describedby='gridTaskPlans_rn']").addClass("readonlycell");
+                }
+            });
+        }
+
+        function fn_SetGrid(mydata) {
+            mydata = mydata || [];
+            $('#gridTaskPlans').clearGridData()
+            .setGridParam({
+                data: mydata
+            }).trigger('reloadGrid');
+        }
+    </script>
+    <!--6.Excel-->
+    <script src="../js/excel/FileSaver.js"></script>
+    <script src="../js/excel/jszip.min.js"></script>
+    <script src="../js/excel/xlsx.js"></script>
+    <script type="text/javascript">
+        function fn_downloadExcel() {
+            var pTitle = $.trim($("#txtTitle").val());
+            $.sa.get(GETITEMSOFCARDSINCURRENTPLAN,
+                          { pTitle: pTitle },
+                          {
+                              "success": function (data) {
+                                  if (data != null) {
+                                      var rData = JSON.parse(data.body);
+                                      if (rData.PList.length > 0) {
+                                          fn_createExcel(rData.PList,rData.TPList,rData.TIList);
+                                      } else {
+                                          $.sa.warning("没有可下载的数据！");
+                                      }
+                                  } else {
+                                      $.sa.warning("没有可下载的数据！");
+                                  }
+                              },
+                              "failure": function (data, statusText, jqXHR) {
+                                  $.sa.warning(data.msg);
+                              }
+                          }, $("body"));
+
+        }
+        function fn_createExcel(data1,data2,data3) {
+            var file = new xlsx.File();
+
+            var sheet1 = file.addSheet("LastPScore");
+            sheet1.setOrientation('landscape');
+            fn_setsheetHeader(sheet1, [["PId","PTitle","DisName","LastPScore"],["计划任务ID","计划任务名称","经销商名称","近期明检总分"]]);
+            fn_setsheetBody(sheet1, data1);
+
+            var sheet2 = file.addSheet("LastTCScore");
+            sheet2.setOrientation('landscape');
+            fn_setsheetHeader(sheet2,  [["TPId","PTitle","DisName","TCTitle","LastTCScore"],["任务ID","计划任务名称","经销商名称","任务卡名称","近期模块明检得分"]]);
+            fn_setsheetBody(sheet2, data2);
+
+            var sheet3 = file.addSheet("LastTIScore");
+            sheet3.setOrientation('landscape');
+            fn_setsheetHeader(sheet3, [["TPId","TIId","PTitle","DisName","TCTitle","TITitle","LastITScore"],["任务ID","指标ID","计划任务名称","经销商名称","任务卡名称","指标名称","近期模块明检得分"]]);
+            fn_setsheetBody(sheet3, data3);
+
+            //for (var i = 0; i < 4; i++) {
+            //    if (i % 2 == 0)
+            //        sheet1.col(i).width = 10;
+            //    else
+            //        sheet1.col(i).width = 12;
+            //}
+            var now = "近期明检得分更新模板" + ".xlsx";
+            file
+              .saveAs('blob')
+              .then(function (content) {
+                  saveAs(content, now);
+              });
+
+        }
+        function fn_setsheetHeader(sheet, data) {
+            for(var y=0;y<2;y++){
+                var h = sheet.addRow();
+                h.isCustom = false;
+                var d=data[y];
+                for (var x = 0; x<d.length; x++) {
+                    setCellHeader_o(h, d[x]);
+                }
+            }
+        }
+        function fn_setsheetBody(sheet, data) {
+            for(var x=0;x<data.length;x++){
+                var r = sheet.addRow();
+                r.isCustom = false;
+                var d=objOfValueToArr(data[x]);
+                for(var y=0;y<d.length;y++){
+                    setCellData_o(r, d[y]);
+                }
+            }
+        }
+    </script>
+     <!--Excel Common Fun-->
+    <script type="text/javascript">
+            function setAlignStyle(cell, h, v) {
+                cell.style.align.h = h || 'center';
+                cell.style.align.v = v||'center';
+                cell.style.align.wrapText = true;
+                cell.style.align.shrinkToFit = true;
+            }
+            function setFontStyle(cell, size, byn) {
+                cell.style.font.name = "微软雅黑";
+                cell.style.font.size = size||9;
+                cell.style.font.bold = byn||false;
+                cell.style.font.color = '#555555';
+            }
+            function setborder(cell, top, left, bottom, right) {
+                var light = 'ffffffff';
+                var dark = 'ff7e6a54';
+                cell.style.border.top = 'thin';//'medium'//cell.style.applyBorder = true;
+                cell.style.border.topColor = 1 ? dark : light;
+                cell.style.border.left = 'thin';
+                cell.style.border.leftColor = 1 ? dark : light;
+                cell.style.border.bottom = 'thin';
+                cell.style.border.bottomColor = 1 ? dark : light;
+                cell.style.border.right = 'thin';
+                cell.style.border.rightColor = 1 ? dark : light;
+            }
+            function fill(cell, type) {
+                type = type || 0;
+                var colors = ['ffffffff', 'ffa2917d', 'ffe4e2de', 'fffff8df', 'fff1eeec', '74a3d2'];
+                // 1: header, 2: first col, 3: second col, 4: gray, 0: white
+                cell.style.fill.patternType = 'solid';
+                cell.style.fill.fgColor = colors[type];
+                cell.style.fill.bgColor = 'ffffffff';
+            }
+            function setSpaceRow(sheet) {
+                var r = sheet.addRow()
+                r.isCustom = false;
+            }
+            function setCellHeader_o(r, d) {
+                var c = r.addCell();
+                c.value = d;
+                //setAlignStyle(c);
+                //setFontStyle(c, 10, true);
+                //setborder(c);
+                //fill(c, 5);
+                return c;
+            }
+            function setCellData_o(r, d,h) {
+                var c = r.addCell();
+                c.value = d;
+                //setAlignStyle(c, h);
+                //setFontStyle(c);
+                //setborder(c);
+            }
+    </script>
+<script type="text/javascript">
+        // 将Object的属性值输出成Array
+        function objOfValueToArr(object) {
+            var arr = [];
+            var i = 0;
+            for (var item in object) {
+                arr[i] = object[item];
+                i++;
+            }
+            return arr;
+        }
+</script>
+}
+<div class="">
+    <div class="row" style="margin-top:10px;">
+        <div class="col-md-12">
+            <span class="fa fa-flag fa-lg gap-icon"></span><span class="page-mtitle">计划任务</span><span>&nbsp;>&nbsp;</span><span class="page-title">计划任务列表</span>
+            <div class="pull-right">
+                <button id="btnSearch" class="btn btn-primary">
+                    <span class="fa fa-search gap-icon"></span>查询
+                </button>
+                <button id="btnCreate" class="btn btn-primary">
+                    <span class="fa fa-plus gap-icon"></span>制作
+                </button>
+                <button id="btnExcelUpload" class="btn btn-primary">
+                    <span class="fa fa-file-excel-o gap-icon"></span>Excel上传
+                </button>
+                <button id="btnExcelDown" class="btn btn-primary">
+                    <span class="fa fa-file-excel-o gap-icon"></span>Excel模板下载
+                </button>
+                <a href="~/Template/计划任务模板.xlsx" class="aline" id="a" style="display:none">Excel模板下载</a>
+                <button id="btnExcelUploadForUpdate" class="btn btn-primary">
+                    <span class="fa fa-file-excel-o gap-icon"></span>近期指标得分上传
+                </button>
+                <button id="btnExcelDownForUpdate" class="btn btn-primary">
+                    <span class="fa fa-file-excel-o gap-icon"></span>近期指标得分模板下载
+                </button>
+            </div>
+        </div>
+    </div>
+    <form method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <div class="col-md-0" id="divfile">
+                <input id="files" name="files" type="file" style="display:none" />
+                <input id="fileText" type="text" class="form-control" style="display:none" />
+            </div>
+            <div class="col-md-0">
+                <input type="button" id="upload" class="btn btn-primary" value="Excel上传" style="display:none;" />
+            </div>
+        </div>
+    </form>
+    <form method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <div class="col-md-0" id="divfileforupdate">
+                <input id="filesforupdate" name="filesforupdate" type="file" style="display:none" />
+                <input id="fileTextforupdate" type="text" class="form-control" style="display:none" />
+            </div>
+            <div class="col-md-0">
+                <input type="button" id="uploadforupdate" class="btn btn-primary" value="Excel上传" style="display:none;" />
+            </div>
+        </div>
+    </form>
+    <div class="row" style="margin-top:10px;">
+        <div class="col-md-4 col-sm-6">
+            <div class="input-group">
+                <span class="input-group-addon ">检核期间</span>
+                <input size="16" type="text" value="" class="form_datetime form-control text-center datewidth"
+                       id="txtSDate" />
+                <span>~</span>
+                <input size="16" type="text" value="" class="form_datetime form-control text-center datewidth datemargin"
+                       id="txtEDate" />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="input-group ">
+                <span class="input-group-addon title-sm">计划任务标题</span>
+                <input size="16" type="text" value="" class="form-control" id="txtTitle" />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-addon title-sm">检核类型</span>
+                <select class="form-control" id="selStatus"></select>
+            </div>
+        </div>
+    </div>
+    <div class="row" style="margin-top:10px;display:none">
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-addon">检核类别</span>
+                <select class="form-control" id="selsourceType"></select>
+            </div>
+        </div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+        <div id="Grid" class="col-md-12">
+            <table id="gridTaskPlans" class="ui-jqgrid-htable"></table>
+            <div id="pager" class="page">
+            </div>
+        </div>
+    </div>
+</div>

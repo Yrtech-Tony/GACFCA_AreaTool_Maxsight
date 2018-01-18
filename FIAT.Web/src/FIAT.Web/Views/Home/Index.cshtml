@@ -1,0 +1,53 @@
+﻿@{
+    Layout = "_LayoutMenu";
+    ViewData["Title"] = "广汽菲克经销商运营质量管理平台";
+}
+@section HeadCss{
+    <style type="text/css">
+        .smartclick {font-size: 16px;font-weight: bold;padding: 10px;cursor: pointer;text-decoration: none;display: block;margin: 10px auto;width: 140px;color: #000;}
+        .smartclick:hover {text-decoration: none;}
+        .quickDiv {margin: 10px;display: inline-block;}
+        .quickDiv span{display: inherit;margin-top: 10px;}
+    </style>
+}
+<div>
+    <div class="row mt60" style="margin:60px -15px;">
+        <div class="col-md-12 txtCenter">
+            <div id="a_pReg_id" class="hidden quickDiv">
+                <a class="smartclick" asp-controller="PerMng" asp-action="PMN010">
+                    <img src="~/images/Login/staff_reg.png" /><span>人员登记</span></a>
+            </div>
+            <div id="a_pprocess_id" class="quickDiv">
+                <a class="smartclick" asp-controller="Statistic" asp-action="STA060">
+                    <img src="~/images/Login/staff_progress.png" /><span>人员检核进度</span></a>
+            </div>
+            <div id="a_score_id" class="quickDiv">
+                <a class="smartclick" asp-controller="Tour" asp-action="TOU010">
+                    <img src="~/images/Login/score_reg.png" /><span>检核登记</span></a> @*检核登记、经销商结果查看*@
+            </div>
+            <div id="a_process_id" class="quickDiv">
+                <a class="smartclick" asp-controller="Statistic" asp-action="STA050">
+                    <img src="~/images/Login/score_progress.png" /><span>巡检进度查询</span></a>
+            </div>
+            <div id="a_tReport_id" class="quickDiv">
+                <a class="smartclick" asp-controller="Report" asp-action="REP020">
+                    <img src="~/images/Login/score_report.png" /><span>区域报告查询</span></a>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts{
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var loginUserType = '@Context.Request.Cookies[SessionKeys.SESSION_USERTYPE]';
+            if (loginUserType == 'Z') {
+                $("#a_score_id").removeClass("hidden");
+                $("#a_pReg_id").removeClass("hidden");
+            } else {
+                $("#a_score_id a").attr("href", "/Tour/TOU020");
+                $("#a_score_id a span").text('经销商结果查询');
+                $("#a_score_id a img").attr("src", "/images/Login/score_search.png");
+            }
+        });
+    </script>
+}

@@ -1,0 +1,108 @@
+﻿@{
+    Layout = "_LayoutOfPop";
+    ViewData["Title"] = "计划任务详细";
+}
+@section HeadCss{
+
+}
+<div class="row-fluid">
+    <div id="Grid" class="col-xs-12" style="margin-top:5px;">
+        <table id="grid" class="ui-jqgrid-htable"></table>
+        <div id="pager" class="page">
+        </div>
+    </div>
+</div>
+@section Scripts{
+<!-- 1. Load -->
+<script type="text/javascript">
+        var _grid,_tpid,_tcid;
+        $(document).ready(function () {
+            _grid = $("#grid");
+            _tpid = Request["paramTPId"] == undefined ? 0 : parseInt(Request["paramTPId"]);
+            _tcid = Request["paramTCId"] == undefined ? 0 : parseInt(Request["paramTCId"]);
+            fn_GridInit();
+            fn_InitData();
+        });
+</script>
+<!-- 1. Load -->
+<script type="text/javascript">
+        function fn_InitData() {
+            $.sa.get(GETLASTITEMSCOREBYPLAN,
+                         { TPId: _tpid,TCId:_tcid },
+                         {
+                             "success": function (data) {
+                                 if (data != null && JSON.parse(data.body).length > 0) {
+                                     fn_SetGrid(JSON.parse(data.body));
+                                 } else {
+                                     $.sa.warning("没有近期指标得分！");
+                                     _grid.jqGrid("clearGridData");
+                                 }
+                             },
+                             "failure": function (data, statusText, jqXHR) {
+                                 _grid.jqGrid("clearGridData");
+                                 $.sa.warning(data.msg);
+                             }
+                         }, $("body"));
+   }
+</script>
+ <!-- 5. Grid -->
+<script type="text/javascript">
+        function fn_GridInit() {
+            _grid.jqGrid({
+                datatype: 'local',
+                colModel: [
+                    {
+                        name: 'ItemId', label: '体系ID', width: 100, align: 'right',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'ItemName', label: '指标名称', width: 300, align: 'left',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    },
+                    {
+                        name: 'LastItemScore', label: '近期指标得分', width: 120, align: 'right',
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            return 'class="readonlycell"';
+                        }
+                    }
+                ],
+                width: $('#Grid').width(),
+                height: '280',
+                shrinkToFit: false,
+                rownumbers: true,
+                multiselect: true,
+                rownumWidth: 50,
+                rowNum: 10000,
+                //rowList: [15, 30, 100],
+                pginput: false,
+                pgbuttons: false,
+                footerrow: false,
+                cellsubmit: 'clientArray',
+                pager: jQuery('#pager'),
+                cellEdit: true,
+                //scroll: true,
+                editurl: 'clientArray',
+                viewrecords: true,
+                gridComplete: function (id) {
+                    //fix the pager position
+                    $('#pager_left').css('width', '25%');
+                    $('#pager_right').css('width', '25%');
+
+                    $("[aria-describedby='grid_rn']").addClass("readonlycell");
+                }
+            });
+        }
+
+        function fn_SetGrid(mydata) {
+            mydata = mydata || [];
+            _grid.clearGridData()
+            .setGridParam({
+                data: mydata
+            }).trigger('reloadGrid');
+        }
+</script>
+}

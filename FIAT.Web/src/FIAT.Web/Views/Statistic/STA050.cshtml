@@ -1,0 +1,815 @@
+﻿@{
+    Layout = "_LayoutMenu";
+    ViewData["Title"] = "巡检进度查询";
+}@section HeadCss{
+    <style type="text/css">
+        table, table td {
+            border: solid 1px #E4E4E4;
+        }
+
+            table td {
+                width: 800px;
+                padding: 5px;
+                text-align: right;
+            }
+
+            table tr:first-child {
+                background-color: #EEEEEE;
+            }
+
+                table tr:first-child > td {
+                    text-align: center;
+                }
+
+        .z-name {
+            text-align: left;
+        }
+
+        .td-center {
+            text-align: center;
+        }
+
+        #divTable {
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+
+        .required_style:before {
+            content: "* ";
+            color: red;
+        }
+
+        .border-bottom {
+            border-bottom: solid 1px #919191;
+        }
+
+        .border-top {
+            border-top: solid 1px #919191;
+        }
+
+        .border-left {
+            border-left: solid 1px #919191;
+        }
+
+        .border-right {
+            border-right: solid 1px #919191;
+        }
+    </style>
+}
+@section Scripts{
+    <script src="~/js/highcharts.js"></script>
+    <!-- 1. Load -->
+    <script type="text/javascript">
+        var busList = '';
+        var repList = [];
+        $(document).ready(function () {
+            fn_Initial();
+            fn_SetVType();
+            //fn_InitialData();
+        });
+    </script>
+    <!-- 2. Init -->
+    <script type="text/javascript">
+        function fn_Initial() {
+            $("#selBusLst").change(function () {
+                fn_SetRepData();
+            });
+            $("#selRepLst").change(function () {
+                fn_SetZoneData();
+            });
+            $("#selZionLst").change(function () {
+                fn_SetAreaData();
+            });
+            $("#selAreaLst").change(function () {
+                fn_getPlans();
+            });
+            $("#selVType").change(function () {
+                fn_getPlans();
+            });
+            $("#btnSearch").on("click", function () {
+                fn_Search();
+            });
+            $("#btnExportExcel").on("click", function () {
+                fn_downLoad();
+            });
+        }
+    </script>
+
+    <!-- 3. InitData -->
+    <script type="text/javascript">
+        function fn_InitialData() {
+            $.sa.get(
+                 GETORGINFO
+                , { UserId: '@Context.Request.Cookies[SessionKeys.SESSION_USERID]' },
+              {
+                  "success": function (data) {
+                      busList = data.body;
+                      $("#selBusLst").html(JsonToCboList("BName", "BId", JSON.parse(busList), { 'SelectType': 'All' }));
+                      $("#selRepLst").html(JsonToCboList("EName", "EId", null, { 'SelectType': 'All' }));
+                      $("#selZionLst").html(JsonToCboList("QName", "QId", null, { 'SelectType': 'All' }));
+                      $("#selAreaLst").html(JsonToCboList("AName", "AId", null, { 'SelectType': 'All' }));
+                      $("#selDisLst").html(JsonToCboList("Name", "Value", null, { 'SelectType': 'SELECT' }));
+                      fn_SetOrgControlStatus();
+                  },
+                  "failure": function (data, statusText, jqXHR) {
+                  }
+              });
+
+        }
+        //大区
+        function fn_SetRepData() {
+            var currentBus = $("#selBusLst").val();
+            $("#selRepLst").html(JsonToCboList("EName", "EId", null, { 'SelectType': 'All' }));
+            $.each(JSON.parse(busList), function (i, v) {
+                if (v.BId == currentBus) {
+                    $("#selRepLst").html(JsonToCboList("EName", "EId", v.RepList, { 'SelectType': 'All' }));
+                }
+            });
+            fn_SetZoneData();
+        }
+        //区域
+        function fn_SetZoneData() {
+            var currentBus = $("#selBusLst").val();
+            var currentRep = $("#selRepLst").val();
+            var data = JSON.parse(busList);
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].BId == currentBus) {
+                    repList = data[i].RepList;
+                    break;
+                }
+            }
+            $("#selZionLst").html(JsonToCboList("QName", "QId", null, { 'SelectType': 'All' }));
+            $.each(repList, function (i, v) {
+                if (v.EId == currentRep) {
+                    $("#selZionLst").html(JsonToCboList("QName", "QId", v.ZionList, { 'SelectType': 'All' }));
+                }
+            });
+            fn_SetAreaData();
+        }
+
+        function fn_SetAreaData() {
+            var currentRep = $("#selRepLst").val();
+            var currentZion = $("#selZionLst").val();
+            var zoneList = [];
+
+            for (var i = 0; i < repList.length; i++) {
+                if (repList[i].EId == currentRep) {
+                    zoneList = repList[i].ZionList;
+                    break;
+                }
+            }
+
+            $("#selAreaLst").html(JsonToCboList("AName", "AId", null, { 'SelectType': 'All' }));
+            $.each(zoneList, function (i, v) {
+                if (v.QId == currentZion) {
+                    $("#selAreaLst").html(JsonToCboList("AName", "AId", v.AreaList, { 'SelectType': 'All' }));
+                }
+            });
+            fn_getPlans();
+        }
+        //期次
+        function fn_getPlans() {
+            $.sa.get(GETPLANSBYORGANIZATION
+               , {
+                   busId: $("#selBusLst").val()
+                   , repId: $("#selRepLst").val()
+                   , areaId: $("#selZionLst").val()
+                   , zoneId: $("#selAreaLst").val()
+                   , vType: $.trim($("#selVType").val())
+                   , status: "A"
+               },
+             {
+                 "success": function (data) {
+                     var result = JSON.parse(data.body);
+                     $("#selPlanLst").html(JsonToCboList("Name", "Value", result, { 'SelectType': 'SELECT' }));
+                 },
+                 "failure": function (data, statusText, jqXHR) {
+                 }
+             });
+        }
+
+
+        function fn_SetOrgControlStatus() {
+            var loginUserType = '@Context.Request.Cookies[SessionKeys.SESSION_USERTYPE]';
+            var OrgZionId = '@Context.Request.Cookies[SessionKeys.SESSION_ORGZIONID]';
+            var OrgAreaId = '@Context.Request.Cookies[SessionKeys.SESSION_ORGAREAID]';
+
+            $("#selZionLst").val("0");
+            $("#selAreaLst").val("0");
+            if (loginUserType == "B") {
+                if ($("#selBusLst").find("option").length >= 2) {
+                    $("#selBusLst").val($("#selBusLst").find("option").eq(1).val());
+                    fn_SetRepData();
+                }
+                $("#selBusLst").attr("disabled", "disabled");
+            } else if (loginUserType == "E") {
+                if ($("#selBusLst").find("option").length >= 2) {
+                    $("#selBusLst").val($("#selBusLst").find("option").eq(1).val());
+                    fn_SetRepData();
+                }
+                if ($("#selRepLst").find("option").length >= 2) {
+                    $("#selRepLst").val($("#selRepLst").find("option").eq(1).val());
+                    fn_SetZoneData();
+                }
+                $("#selBusLst").attr("disabled", "disabled");
+                $("#selRepLst").attr("disabled", "disabled");
+            } else if (loginUserType == 'R') {
+                if ($("#selBusLst").find("option").length >= 2) {
+                    $("#selBusLst").val($("#selBusLst").find("option").eq(1).val());
+                    fn_SetRepData();
+                }
+                if ($("#selRepLst").find("option").length >= 2) {
+                    $("#selRepLst").val($("#selRepLst").find("option").eq(1).val());
+                    fn_SetZoneData();
+                }
+                $("#selBusLst").attr("disabled", "disabled");
+                $("#selRepLst").attr("disabled", "disabled");
+                $("#selZionLst").val(OrgZionId);
+                fn_SetAreaData();
+                $("#selZionLst").attr("disabled", "disabled");
+            } else if (loginUserType == 'Z') {
+                if ($("#selBusLst").find("option").length >= 2) {
+                    $("#selBusLst").val($("#selBusLst").find("option").eq(1).val());
+                    fn_SetRepData();
+                }
+                if ($("#selRepLst").find("option").length >= 2) {
+                    $("#selRepLst").val($("#selRepLst").find("option").eq(1).val());
+                    fn_SetZoneData();
+                }
+                $("#selBusLst").attr("disabled", "disabled");
+                $("#selRepLst").attr("disabled", "disabled");
+                $("#selZionLst").val(OrgZionId);
+                fn_SetAreaData();
+                $("#selAreaLst").val(OrgAreaId);
+                $("#selZionLst").attr("disabled", "disabled");
+                $("#selAreaLst").attr("disabled", "disabled");
+            }
+            fn_getPlans();
+        }
+        function fn_SetVType() {
+            $.sa.get(TASKGETSTATUS,
+                         { GroupCode: '09', BusId: "@Context.Request.Cookies[SessionKeys.SESSION_ORGBIZID]" },
+                         {
+                             "success": function (data) {
+                                 if (data != null) {
+                                     var jData = JSON.parse(data.body);
+                                     if (jData.length == 1) {
+                                         $('#selVType').html(JsonToCboList("Name", "Value", JSON.parse(data.body)));
+                                         $("#selVType").prop("disabled", true);
+                                     }
+                                     else {
+                                         $('#selVType').html(JsonToCboList("Name", "Value", JSON.parse(data.body), { "SelectType": "ALL" }));
+                                         $("#selVType").prop("disabled", false);
+                                     }
+                                     fn_InitialData();
+                                 }
+                             },
+                             "failure": function (data, statusText, jqXHR) {
+                                 $.sa.warning(data.msg);
+                             }
+                         });
+        }
+    </script>
+    <!--4. customer Method-->
+    <script>
+        function fn_Search() {
+            //if ($("#selBusLst").val() == null || $("#selBusLst").val() === "select") {
+            //    $.sa.warning("请选择业务类型!");
+            //    $("#selBusLst").focus();
+            //    return;
+            //} else
+            if ($("#selPlanLst").val() == "select") {
+                $.sa.warning("请选择巡检月份!");
+                $("#selPlanLst").focus();
+                return;
+            } else {
+                $.sa.get(
+                    GETTOUPROGRESSFORZONE,
+                  {
+                      busId: $("#selBusLst").val(), repId: $("#selRepLst").val(), areaId: $("#selZionLst").val(), zoneId: $("#selAreaLst").val(), batchId: $("#selPlanLst").val()
+                  },
+        {
+            "success": function (result) {
+                if (result != null) {
+                    var data = JSON.parse(result.body);
+
+                    //table
+                    fn_DrawTableForChart(data);
+                    //chart
+                    var yData = [];
+                    for (var j = 0; j < data.DList.length; j++) {
+                        var list = new Object();
+                        list.name = data.DList[j].DisName;
+                        list.y = parseFloat(data.DList[j].Rate);
+                        yData.push(list);
+                    }
+                    fn_DrawTourProgressChart('', yData);
+                    $.sa.alert("查询完毕");
+                }
+            },
+            "failure": function (data, statusText, jqXHR) {
+                $.sa.warning(data.msg);
+            }
+        }, $("body"));
+            }
+
+        }
+        function fn_DrawTourProgressChart(arrX, data) {
+            $("#container1").height(50 + data.length * 32 + 30);
+            $('#container1').highcharts({
+                chart: {
+                    type: 'bar'
+                },
+                title: {
+                    text: '巡检进度'
+                },
+                //subtitle: {
+                //    text: ''
+                //},
+                credits: {
+                    enabled: false //不显示LOGO
+                },
+                xAxis: {
+                    //categories: arrX,
+                    type: 'category'
+                    //,
+                    //crosshair: true
+                },
+                yAxis: {
+                    min: 0,
+                    max: 100, // 定义Y轴 最大值
+                    minRange: 1,
+                    title: {
+                        text: '巡检进度(%)'
+                    }
+                },
+                legend: {
+                    enabled: false
+                },
+                //tooltip: {
+                //    headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                //    pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                //    '<td style="padding:0"><b>{point.y:.1f}%</b></td></tr>',
+                //    footerFormat: '</table>',
+                //    shared: true,
+                //    useHTML: true
+                //},
+                tooltip: {
+                    headerFormat: '',
+                    pointFormat: '<span style="color:{point.color}">{point.name}</span>: <b>{point.y:.1f}%</b>'
+                },
+
+                plotOptions: {
+                    //column: {
+                    //    pointPadding: 0.2,
+                    //    borderWidth: 0
+                    //}
+                    series: {
+                        borderWidth: 0,
+                        dataLabels: {
+                            enabled: true,
+                            format: '{point.y:.1f}%'
+                        }
+                    }
+                },
+                series: [{
+                    //name: '',
+                    data: data
+                }]
+            });
+
+        }
+        function fn_DrawTableForChart(data) {
+            var userType = '@Context.Request.Cookies[SessionKeys.SESSION_USERTYPE]';
+            var table = "<table id='T1'>";
+            if (userType == "Z") {
+                table += "<tr><td>本次巡检任务</td><td>已完成</td><td>待完成</td><td>巡检进度</td></tr>";
+            } else {
+                table += "<tr><td>区域类型</td><td>区域名称</td><td>本次巡检任务</td><td>已完成</td><td>待完成</td><td>巡检进度</td></tr>";
+            }
+            if (userType == "A" || userType == "B") {
+                table += "<tr><td class='z-name' rowspan=" + data.BList.length + ">业务类型</td>";
+                $.each(data.BList, function (idx, ele) {
+                    table += "<td class='z-name'>" + ele.BName + "</td><td class='td-center'>" + ele.TotalDisCnt + "</td><td class='td-center'>" + ele.FinishDisCnt + "</td><td class='td-center'>" + (ele.TotalDisCnt - ele.FinishDisCnt) + "</td><td class='td-center'>" + ele.Rate + "%" + "</td></tr>";
+                });
+            }
+            if (userType == "A" || userType == "B" || userType == "E") {
+                table += "<tr><td class='z-name' rowspan=" + data.RList.length + ">大区</td>";
+                $.each(data.RList, function (idx, ele) {
+                    table += "<td class='z-name'>" + ele.RName + "</td><td class='td-center'>" + ele.TotalDisCnt + "</td><td class='td-center'>" + ele.FinishDisCnt + "</td><td class='td-center'>" + (ele.TotalDisCnt - ele.FinishDisCnt) + "</td><td class='td-center'>" + ele.Rate + "%" + "</td></tr>";
+                });
+            }
+            if (userType == "A" || userType == "B" || userType == "E" || userType == "R") {
+                table += "<tr><td class='z-name' rowspan=" + data.AList.length + ">区域</td>";
+                $.each(data.AList, function (idx, ele) {
+                    table += "<td class='z-name'>" + ele.AName + "</td><td class='td-center'>" + ele.TotalDisCnt + "</td><td class='td-center'>" + ele.FinishDisCnt + "</td><td class='td-center'>" + (ele.TotalDisCnt - ele.FinishDisCnt) + "</td><td class='td-center'>" + ele.Rate + "%" + "</td></tr>";
+                });
+            }
+            if (userType == "A" || userType == "B" || userType == "E" || userType == "R") {
+                table += "<tr><td class='z-name' rowspan=" + data.ZList.length + ">小区</td>";
+                $.each(data.ZList, function (idx, ele) {
+                    table += "<td class='z-name'>" + ele.ZName + "</td><td class='td-center'>" + ele.TotalDisCnt + "</td><td class='td-center'>" + ele.FinishDisCnt + "</td><td class='td-center'>" + (ele.TotalDisCnt - ele.FinishDisCnt) + "</td><td class='td-center'>" + ele.Rate + "%" + "</td></tr>";
+                });
+
+            } else if (userType == "Z") {
+
+                $.each(data.ZList, function (idx, ele) {
+                    table += "<tr><td class='td-center'>" + ele.TotalDisCnt + "</td><td class='td-center'>" + ele.FinishDisCnt + "</td><td class='td-center'>" + (ele.TotalDisCnt - ele.FinishDisCnt) + "</td><td class='td-center'>" + ele.Rate + "%" + "</td></tr>";
+                });
+            }
+            table += "</table>";
+            //console.log(table);
+            $("#divTable").html(table);
+
+            $('#T1').find("tr:first").find("td").addClass("border-top");
+            $('#T1').find("tr").find("td:first").addClass("border-left");
+            $('#T1').find("tr").find("td").addClass("border-right");
+            $('#T1').find("tr").find("td").addClass("border-bottom");
+        }
+
+    </script>
+    <!--5.Excel download-->
+    <script src="../js/excel/FileSaver.js"></script>
+    <script src="../js/excel/jszip.min.js"></script>
+    <script src="../js/excel/xlsx.js"></script>
+    <script>
+        function fn_downLoad() {
+            if ($("#selBusLst").val() == null || $("#selBusLst").val() === "select") {
+                $.sa.warning("请选择业务类型!");
+                $("#selBusLst").focus();
+                return;
+            } else if ($("#selPlanLst").val() == "select") {
+                $.sa.warning("请选择巡检月份!");
+                $("#selPlanLst").focus();
+                return;
+            } else {
+                $.sa.get(
+                    GETTOUPROGRESSFORZONE
+               , {
+                   busId: $("#selBusLst").val(), repId: $("#selRepLst").val(), areaId: $("#selZionLst").val(), zoneId: $("#selAreaLst").val(), batchId: $("#selPlanLst").val()
+               },
+             {
+                 "success": function (data) {
+                     var result = JSON.parse(data.body);
+                     fn_DrawTable(result);
+                 },
+                 "failure": function (data, statusText, jqXHR) {
+                 }
+             });
+
+            }
+        }
+
+        function fn_DrawTable(result) {
+            var file = new xlsx.File();
+            var reportname = $("#selPlanLst>option:selected").text() + "_"
+                             + $("#selVType>option:selected").text() + "_"
+                             + ($.trim($("#selAreaLst").val()) == 0 ? $("#selZionLst>option:selected").text() : $("#selAreaLst>option:selected").text()) + "_"
+                             + "巡检进度";
+            var sheet = file.addSheet(reportname);
+            sheet.setShowGridLine(false);
+            sheet.setColWidth(0, 1, 8);
+            sheet.setColWidth(1, 2, 12);
+            sheet.setColWidth(2, 3, 8);
+            sheet.setColWidth(3, 4, 14);
+            sheet.setColWidth(4, 5, 8);
+            sheet.setColWidth(5, 6, 12);
+            var tr = sheet.addRow();
+            tr.setHeightCM(1.2);
+
+            for (var p = 0; p < 6; p++) {
+                var tc = tr.addCell();
+                border(tc, 1, 1, 1, 1);
+                if (p == 0) {
+                    if ($("#selAreaLst").val() != "0" && $("#selAreaLst").val() != "") {
+                        tc.value = "小区进度报告";
+                    } else if ($("#selZionLst").val() != "0" && $("#selZionLst").val() != "") {
+                        tc.value = "区域进度报告";
+                    } else {
+                        tc.value = "进度报告";
+                    }
+                    tc.hMerge = 5;
+                    tc.style.align.v = 'center';
+                    tc.style.align.h = 'center';
+                    fill(tc, 4)
+                    font(tc, 12, "微软雅黑", true);
+                }
+            }
+
+
+            var header1 = sheet.addRow();
+            var hrow1 = ['业务类型', $("#selBusLst option:selected").text(), '大区', $("#selRepLst option:selected").text(), '区域', $("#selZionLst option:selected").text()];
+
+            for (var y = 0; y < hrow1.length; y++) {
+                var hc = header1.addCell();
+                hc.value = hrow1[y];
+                hc.style.align.v = 'center';
+                hc.style.align.h = 'center';
+                hc.style.font.color = '#555555';
+                border(hc, 1, 1, 1, 1);
+                if (y == 0 || y == 2 || y == 4) {
+                    font(hc, 10, "Microsoft YaHei", false);
+                    fill(hc, 4)
+                } else {
+                    font(hc);
+                }
+            }
+
+            var header2 = sheet.addRow();
+            var planName = $("#selPlanLst option:selected").text();
+            var hrow2 = ['小区', $("#selAreaLst option:selected").text(), '检核类型', $("#selVType>option:selected").text(), '巡检月份', planName];
+
+            for (var y = 0; y < hrow2.length; y++) {
+                var hc = header2.addCell();
+                hc.value = hrow2[y];
+                hc.style.align.v = 'center';
+                hc.style.align.h = 'center';
+                hc.style.font.color = '#555555';
+                border(hc, 1, 1, 1, 1);
+                if (y == 0 || y == 2 || y == 4) {
+                    font(hc, 10, "Microsoft YaHei", false);
+                    fill(hc, 4);
+                } else {
+                    font(hc);
+                }
+            }
+
+            sheet.addRow();
+            var r_header = sheet.addRow();
+            var h_cell = r_header.addCell();
+            h_cell.value = "区域采集进度";
+            h_cell.hMerge = 5;
+            font(h_cell);
+
+            var header = sheet.addRow();
+            var hrow = ['区域名称', '采集进度'];
+            for (var i = 0; i < hrow.length; i++) {
+                var hc = header.addCell();
+                hc.value = hrow[i];
+                hc.style.align.v = 'center';
+                hc.style.align.h = 'center';
+                hc.style.font.color = '#555555';
+                border(hc, 1, 1, 1, 1);
+                font(hc, 10, "Microsoft YaHei", false);
+                fill(hc, 4)
+            }
+
+            for (var i = 0; i < result.AList.length; i++) {
+                var daqy_h = sheet.addRow();
+                var hc1 = daqy_h.addCell();
+                hc1.value = result.AList[i].AName;
+                border(hc1, 1, 1, 1, 1);
+                font(hc1);
+                hc1.style.align.v = 'center';
+                hc1.style.align.h = 'left';
+                hc1.style.font.color = '#555555';
+                var hc2 = daqy_h.addCell();
+                hc2.value = result.AList[i].Rate + "%";
+                border(hc2, 1, 1, 1, 1);
+                font(hc2);
+                hc2.style.align.v = 'center';
+                hc2.style.align.h = 'right';
+                hc2.style.font.color = '#555555';
+            }
+
+            sheet.addRow();
+            var r_header = sheet.addRow();
+            var h_cell = r_header.addCell();
+            h_cell.value = "小区采集进度";
+            h_cell.hMerge = 5;
+            font(h_cell);
+
+            var header = sheet.addRow();
+            var hrow = ['小区名称', '采集进度'];
+            for (var i = 0; i < hrow.length; i++) {
+                var hc = header.addCell();
+                hc.value = hrow[i];
+                hc.style.align.v = 'center';
+                hc.style.align.h = 'center';
+                hc.style.font.color = '#555555';
+                border(hc, 1, 1, 1, 1);
+                font(hc, 10, "Microsoft YaHei", false);
+                fill(hc, 4)
+            }
+
+            for (var i = 0; i < result.ZList.length; i++) {
+                var daqy_h = sheet.addRow();
+                var hc1 = daqy_h.addCell();
+                hc1.value = result.ZList[i].ZName;
+                border(hc1, 1, 1, 1, 1);
+                font(hc1);
+                hc1.style.align.v = 'center';
+                hc1.style.align.h = 'left';
+                hc1.style.font.color = '#555555';
+                var hc2 = daqy_h.addCell();
+                hc2.value = result.ZList[i].Rate + "%";
+                border(hc2, 1, 1, 1, 1);
+                font(hc2);
+                hc2.style.align.v = 'center';
+                hc2.style.align.h = 'right';
+                hc2.style.font.color = '#555555';
+            }
+
+            sheet.addRow();
+            var r_header = sheet.addRow();
+            var h_cell = r_header.addCell();
+            h_cell.value = "经销商采集进度";
+            h_cell.hMerge = 5;
+            font(h_cell);
+
+            var header = sheet.addRow();
+            var hrow = ['经销商代码', '经销商名称', '所属小区', '采集进度', '采集地点', '采集时间'];
+            if ($("#selAreaLst").val() != "0" && $("#selAreaLst").val() != "")
+                   hrow = ['经销商代码', '经销商名称', '所属小区', '采集进度','采集时间'];
+
+            for (var i = 0; i < hrow.length; i++) {
+                var hc = header.addCell();
+                hc.value = hrow[i];
+                hc.style.align.v = 'center';
+                hc.style.align.h = 'center';
+                hc.style.font.color = '#555555';
+                border(hc, 1, 1, 1, 1);
+                font(hc, 10, "Microsoft YaHei", false);
+                fill(hc, 4)
+                if (hrow.length==5&&i == 4) {
+                    var c = header.addCell();
+                    border(c, 1, 1, 1, 1);
+                    fill(c, 4);
+                    hc.hMerge = 1;
+                }
+            }
+
+            for (var i = 0; i < result.DList.length; i++) {
+                var daqy_h = sheet.addRow();
+                var hc1 = daqy_h.addCell();
+                hc1.value = result.DList[i].DisCode;
+                border(hc1, 1, 1, 1, 1);
+                font(hc1);
+                hc1.style.align.v = 'center';
+                hc1.style.align.h = 'center';
+                hc1.style.font.color = '#555555';
+
+                var hc2 = daqy_h.addCell();
+                hc2.value = result.DList[i].DisName;
+                border(hc2, 1, 1, 1, 1);
+                font(hc2);
+                hc2.style.align.v = 'center';
+                hc2.style.align.h = 'center';
+                hc2.style.font.color = '#555555';
+
+                var hc3 = daqy_h.addCell();
+                hc3.value = result.DList[i].ZoneName;
+                border(hc3, 1, 1, 1, 1);
+                font(hc3);
+                hc3.style.align.v = 'center';
+                hc3.style.align.h = 'center';
+                hc3.style.font.color = '#555555';
+
+                var hc4 = daqy_h.addCell();
+                hc4.value = result.DList[i].Rate + "%";;
+                border(hc4, 1, 1, 1, 1);
+                font(hc4);
+                hc4.style.align.v = 'center';
+                hc4.style.align.h = 'center';
+                hc4.style.font.color = '#555555';
+
+                if ($("#selAreaLst").val() != "0" && $("#selAreaLst").val() != "") {
+                    var hc5 = daqy_h.addCell();
+                    hc5.value = result.DList[i].EdateTime;
+                    border(hc5, 1, 1, 1, 1);
+                    font(hc5);
+                    hc5.style.align.v = 'center';
+                    hc5.style.align.h = 'center';
+                    hc5.style.font.color = '#555555';
+
+                    var hc6 = daqy_h.addCell();
+                    border(hc6, 1, 1, 1, 1);
+                    hc5.hMerge = 1;
+
+                } else {
+                    var hc5 = daqy_h.addCell();
+                    hc5.value = result.DList[i].CollAddr;
+                    border(hc5, 1, 1, 1, 1);
+                    font(hc5);
+                    hc5.style.align.v = 'center';
+                    hc5.style.align.h = 'center';
+                    hc5.style.font.color = '#555555';
+
+                    var hc6 = daqy_h.addCell();
+                    hc6.value = result.DList[i].EdateTime;
+                    border(hc6, 1, 1, 1, 1);
+                    font(hc6);
+                    hc6.style.align.v = 'center';
+                    hc6.style.align.h = 'center';
+                    hc6.style.font.color = '#555555';
+                }
+            }
+
+            file
+              .saveAs('blob')
+              .then(function (content) {
+                  saveAs(content, reportname+".xlsx");
+              });
+        }
+
+        function border(cell, top, left, bottom, right) {
+            var light = 'ffffffff';
+            var dark = 'ff7e6a54';
+            cell.style.border.top = 'thin';
+            cell.style.border.topColor = top ? dark : light;
+            cell.style.border.left = 'thin';
+            cell.style.border.leftColor = left ? dark : light;
+            cell.style.border.bottom = 'thin';
+            cell.style.border.bottomColor = bottom ? dark : light;
+            cell.style.border.right = 'thin';
+            cell.style.border.rightColor = right ? dark : light;
+        }
+        function fill(cell, type) {
+            type = type || 0;
+            var colors = ['ffffffff', 'ffa2917d', 'ffe4e2de', 'fffff8df', '74a3d2'];
+            // 1: header, 2: first col, 3: second col, 4: gray, 0: white
+            cell.style.fill.patternType = 'solid';
+            cell.style.fill.fgColor = colors[type];
+            cell.style.fill.bgColor = 'ffffffff';
+        }
+        function font(cell, fontsize, fontfamily, bold, underline) {
+            fontsize = fontsize || 9;
+            fontfamily = fontfamily || "微软雅黑";
+            bold = bold || false;
+            underline = underline || false;
+            cell.style.font.size = fontsize;
+            cell.style.font.name = fontfamily;
+            cell.style.font.bold = bold;
+            cell.style.font.underline = underline;
+        }
+
+    </script>
+}
+
+<div class="row gap-top">
+    <div class="col-md-12">
+        <span class="fa fa-flag fa-lg gap-icon"></span><span class="page-mtitle"></span>巡视检核<span>&nbsp;>&nbsp;</span>
+        <span class="page-title">巡检进度查询</span>
+        <div class="pull-right">
+            <button class="btn btn-primary" id="btnSearch">
+                <span class="fa fa-search gap-icon"></span>查询
+            </button>
+            <button class="btn btn-primary hidden-xs" id="btnExportExcel">
+                <span class="fa fa-file-excel-o gap-icon"></span>进度导出
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 col-sm-4 gap-top">
+        <div class="input-group">
+            <span class="input-group-addon title-sm ">业务类型</span>
+            <select class="form-control" id="selBusLst"></select><!--营销区，客户服务区-->
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-4 gap-top">
+        <div class="input-group">
+            <span class="input-group-addon title-sm ">大区</span>
+            <select class="form-control orgWidth" id="selRepLst"></select><!--大区-->
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-4 gap-top">
+        <div class="input-group">
+            <span class="input-group-addon title-sm ">区域</span>
+            <select class="form-control orgWidth" id="selZionLst"></select><!--区域-->
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-4 col-sm-4 gap-top">
+        <div class="input-group">
+            <span class="input-group-addon title-sm ">小区</span>
+            <select class="form-control orgWidth" id="selAreaLst"></select><!--小区-->
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-12 col-xs-12  gap-top">
+        <div class="input-group">
+            <span class="input-group-addon title-sm">检核类型</span>
+            <select class="form-control" id="selVType"></select>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-4 gap-top">
+        <div class="input-group">
+            <span class="input-group-addon title-sm required_style">巡检月份</span>
+            <select class="form-control" id="selPlanLst"></select><!--期次-->
+        </div>
+    </div>
+</div>
+
+<div class="row gap-top">
+    <span style="padding-left:5px; font-weight:bold;text-decoration:underline;">>>采集进度</span>
+</div>
+
+<div class="row gap-top" id="divTable">
+</div>
+<div class="row gap-top">
+    <div class="col-md-12">
+        <div id="container1" style="min-width:200px;height:380px"></div>
+    </div>
+</div>

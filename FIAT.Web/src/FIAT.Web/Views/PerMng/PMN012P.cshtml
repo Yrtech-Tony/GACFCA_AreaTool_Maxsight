@@ -1,0 +1,171 @@
+﻿@{
+    Layout = "_LayoutOfPop";
+    ViewData["Title"] = "选择业务类型和巡检月份";
+}
+@section HeadCss{
+     <style type="text/css">
+         .required_style:before {
+            content: "* ";
+            color: red;
+        }
+    </style>
+}
+
+<div class="row-fluid">
+    <div class="row gap-top">
+        <div class="col-xs-12"><span style="color:red" id="span_warning"></span></div>
+    </div>
+    <div class="row gap-top">
+        <div class="col-xs-5">
+            <div class="input-group">
+                <span class="input-group-addon title-xs required_style">业务类型</span>
+                <select class="form-control" id="selBusLst"></select>
+            </div>
+        </div>
+        <div class="col-xs-5">
+            <div class="input-group">
+                <span class="input-group-addon title-xs required_style">巡检月份</span>
+                <select class="form-control" id="selPlanLst"></select>
+            </div>
+        </div>
+        <div class="col-xs-2">
+            <div class="pull-right">
+                <button class="btn btn-primary" id="btnCommit">
+                    <span class="fa fa-send gap-icon"></span>确定
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts{
+<!-- 1. Load -->
+<script type="text/javascript">
+    var busList = Request["BList"];
+    $(document).ready(function () {
+        fn_InitData();
+    });
+</script>
+<!--InitData-->
+<script type="text/javascript">
+    function fn_InitData() {
+        fn_BindBusType();
+        fn_BindYearMonth();
+        fn_InitEvent();
+        $("#span_warning").hide();
+    }
+    function fn_BindBusType() {
+        var buzList=JSON.parse(busList);
+        if (buzList.length == 1) {
+            $("#selBusLst").html(JsonToCboList("BName", "BCode", buzList));
+            $("#selBusLst").attr("disabled","disabled");
+        }
+        else
+            $("#selBusLst").html(JsonToCboList("BName", "BCode", buzList, { 'SelectType': 'Select' }));
+    }
+    function fn_BindYearMonth() {
+        var yearMonth = fn_GetYearMonth().reverse();
+        var buzType = '@Context.Request.Cookies[SessionKeys.SESSION_ORGBIZTYPE]';
+        if ($("#selBusLst").val() === "select") {
+            $("#selPlanLst").html(JsonToCboList("Name", "Value", "", { 'SelectType': 'Select' }));
+        }
+        else if (buzType == 'S' || $("#selBusLst").val() == "S" || buzType == 'M' || $("#selBusLst").val() == 'M' || buzType == 'T' || $("#selBusLst").val() == 'T') {
+            var d = yearMonth.reverse();
+            d.pop();
+            $("#selPlanLst").html(JsonToCboList("Name", "Value", d));
+            $("#span_warning").hide();
+        }
+        else {
+            var data = [];
+            //Modify by dong.limin 2018-1-4 10:51:53
+            if (yearMonth.length > 8) {
+                //2017年客服巡检月份组合规律：04~05,06~07,08~09,10~11,12~01
+                for (var i = 0; i < 9; i += 2) {
+                    var text = yearMonth[i].Name;
+                    data.push({ "Name": text + '~' + fn_GetNextMonth(text.slice(4)), "Value": yearMonth[i].Value });
+                }
+                //2018年客服巡检月份组合规律：01~02,03~04,05~06
+                for (var i = 9; i < yearMonth.length; i += 2) {
+                    var text = yearMonth[i].Name;
+                    data.push({ "Name": text + '~' + fn_GetNextMonth(text.slice(4)), "Value": yearMonth[i].Value });
+                }
+            } else {
+                //2017年客服巡检月份组合规律：04~05,06~07,08~09,10~11,12~01
+                for (var i = 0; i < yearMonth.length; i += 2) {
+                    var text = yearMonth[i].Name;
+                    data.push({ "Name": text + '~' + fn_GetNextMonth(text.slice(4)), "Value": yearMonth[i].Value });
+                }
+            }
+            $("#selPlanLst").html(JsonToCboList("Name", "Value", data.reverse()));
+            $("#span_warning").hide();
+        }
+    }
+    function fn_GetNextMonth(m) {
+        var month = parseInt(m);
+        return month + 1 == 13 ? '01' : month + 1 == 12 ? '12' : '0' + (month + 1);
+
+    }
+    function fn_GetYearMonth() {
+        var diff = '@ViewBag.Diff';
+        var currentYear = '@ViewBag.CurrentYear';
+        var currentMonth = '@ViewBag.CurentMonth';
+        var dates = [];
+        for (var i = 0; i < (diff > 36 ? 36 : diff) ; i++) {
+            var date = "";
+            if (currentMonth < 1) {
+                currentYear--;
+                currentMonth = 12;
+                date = currentYear + "" + fn_Fixten(currentMonth);
+            } else if (currentMonth >= 1) {
+                date = currentYear + "" + fn_Fixten(currentMonth);
+            }
+            currentMonth--;
+            dates.push({ "Name": date, "Value": date });
+        }
+        return dates;
+    }
+    function fn_Fixten(i) {
+        if (i < 10) {
+            return "0" + i;
+        } else {
+            return i;
+        }
+    }
+</script>
+<!--InitEvent-->
+<script type="text/javascript">
+    function fn_InitEvent() {
+        $("#selBusLst").change(function () {
+            fn_BindYearMonth();
+        });
+        $("#btnCommit").click(function () {
+            fn_Commit();
+        });
+    }
+
+</script>
+<!--Commit-->
+<script type="text/javascript">
+    function fn_Commit() {
+        var busType = $("#selBusLst").val();
+        var m = $("#selPlanLst").val();
+        var disList = [];
+
+        if (busType == "select") {
+            $("#span_warning").text("请选择业务类型。");
+            $("#span_warning").show();
+            return;
+        } else if (m == "select") {
+            $("#span_warning").text("请选择巡检月份。");
+            $("#span_warning").show();
+            sleep(1000);
+            $("#span_warning").hide();
+            return;
+        } else {
+            disList.push($("#selBusLst").val());
+            disList.push($("#selPlanLst").val());
+        }
+        window.parent.popcallback(disList);
+    }
+
+</script>
+}

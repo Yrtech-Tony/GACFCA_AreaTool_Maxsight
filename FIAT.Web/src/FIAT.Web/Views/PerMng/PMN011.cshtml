@@ -1,0 +1,282 @@
+﻿@{
+    Layout = "_LayoutOfPop";
+    ViewData["Title"] = "人员登记";
+}
+
+@section Scripts{
+    <!-- 1. Load -->
+    <script type="text/javascript">
+        var _grid, _gridName;
+        var _post;
+        var _batch = Request["Batch"];
+        var _disId = Request["DisId"];
+        $(document).ready(function () {
+            Initialize();
+            InitData();
+
+            $("#btnAdd").on("click", function () {
+                fn_Addrow();
+            });
+
+            $("#btnDelete").on("click", function () {
+                fn_Delrow();
+            });
+
+            $("#btnSave").on("click", function () {
+                fn_Save();
+            });
+        });
+    </script>
+
+    <!-- 2. Init -->
+    <script type="text/javascript">
+        function Initialize() {
+            _gridName = 'grid';
+            _grid = $('#' + _gridName);
+            fn_GetPost();
+        }
+        function InitData() {
+            //fn_initData();
+        }
+    </script>
+    <!--3. validation-->
+    <script>
+        function fn_ValidationBeforeSave() {
+            fn_SaveCell.call(_grid);
+            var editData = _grid.jqGrid("getRowData");
+
+            if ($("#txtStuffName").val() == "") {
+                $.sa.warning("请输入姓名!");
+                return false;
+            } else if (editData.length == 0) {
+                $.sa.warning("请添加岗位信息!");
+                return false;
+            } else {
+                $.each(editData, function (idx, item) {
+                    if ($.trim(item.PostCode) == "") {
+                        $.sa.warning("请选择岗位!");
+                        return false;
+                    }
+                })
+            }
+            return true;
+        }
+    </script>
+    <!-- 4. Customer Method-->
+    <script>
+        function fn_Addrow() {
+            var ids = _grid.getDataIDs();
+            var pref = $.jgrid.uidPref;
+            var newid = 1;
+            if (ids && ids.length > 0) {
+                var regx = new RegExp(pref, 'g');
+                var nids = ids.join(',').replace(regx, '').split(',');
+                var maxid = Math.max.apply(Math, nids);
+                newid = maxid + 1;
+            }
+            newid = pref + (newid).toString();
+            var rowdata = {
+                PostCode: "",
+                DMSYN: false,
+                Status: "",
+                AuthenticateYN: ""
+            };
+            _grid.addRowData(newid, rowdata, 'last');
+            $(_grid.getGridRowById(newid)).addClass("edited");
+        }
+
+        function fn_Delrow() {
+            var ids = _grid.jqGrid('getGridParam', 'selarrrow');
+            if (ids.length <= 0) {
+                $.sa.warning("请选择要删除的行。", {
+                    fnClose: function () {
+                        $("#selZionLst").focus();
+                    }
+                });
+                return;
+            }
+            for (var i = ids.length - 1; i >= 0; i--) {
+                if (_grid.getCell(ids[i], "SDisId") != "") {
+                    _grid.setCell(ids[i], "UseYN", "Flase");
+                    $(_grid.getGridRowById(ids[i])).addClass("edited");
+                }
+                else {
+                    _grid.delRowData(ids[i]);
+                }
+            }
+        }
+
+        function fn_Save() {
+            if (!fn_ValidationBeforeSave()) {
+                return;
+            } else {
+                var editData = _grid.jqGrid("getRowData");
+                var saveData = {
+                    Batch: _batch, DisId: _disId, StuffName: $("#txtStuffName").val(), UserId: '@Context.Request.Cookies[SessionKeys.SESSION_USERID]'
+                    , StuffInfoList: editData
+                };
+                $.sa.confirm('确定保存吗？', {
+                    fnOk: function () {
+                        $(".close").click();
+                        $.sa.post(
+                            "STAFFINFOREG",
+                             JSON.stringify(saveData),
+                             {
+                                 "success": function (data) {
+                                     $.sa.alert('保存成功！');
+                                     window.parent.popcallback("success");
+                                 },
+                                 "failure": function (data) {
+                                     $.sa.alert("保存失败");
+                                 }
+                             }, $("body"));
+                    }
+                });
+            }
+        }
+
+        // 查询岗位
+        function fn_GetPost() {
+            $.sa.get(TASKGETSTATUS, { GroupCode: '18' },
+              {
+                  "success": function (data) {
+                      _post = NameValueListToJson('Name', 'Value', JSON.parse(data.body), { 'SelectType': 'BLANK' });
+                      fn_GridInit();
+                  },
+                  "failure": function (data, statusText, jqXHR) {
+                  }
+              });
+        }
+    </script>
+    <!-- 5. Grid -->
+    <script type="text/javascript">
+        function fn_GridInit() {
+            $('#grid').jqGrid({
+                datatype: 'local',
+                colModel: [
+                    {
+                        name: 'PostCode', label: '岗位', width: 150, align: 'center', editable: true
+                        //, cellattr: function (rowId, val, rawObject, cm, rdata) {
+                        //    return 'class="readonlycell dotdotdot"';
+                        //}
+                        , edittype: 'select'
+                        , formatter: 'select',
+                        formatoptions: {
+                            value: _post
+                        },
+                        editoptions: {
+                            'class': 'form-control',
+                            value: _post
+                        }
+                    },
+                    {
+                        name: 'DMSYN', label: '是否DMS备案', width: 100, align: 'center',
+                        formatter: 'checkbox', formatoptions: { disabled: false }, editoptions: { value: 'True:False' }
+                    },
+                     {
+                         name: 'AuthenticateYN', label: '是否通过认证', width: 100, align: 'center',
+                         formatter: 'checkbox', formatoptions: { disabled: false }, editoptions: { value: 'True:False' }
+                     },
+                     {
+                         name: 'PartTimeJob', label: '是否兼职', width: 100, align: 'center',
+                         formatter: 'checkbox', formatoptions: { disabled: false }, editoptions: { value: 'True:False' }
+                     },
+                     {
+                         name: 'Status', label: '状态', width: 100, align: 'center', editable: true
+                         , edittype: 'select'
+                         , formatter: 'select',
+                         formatoptions: {
+                             value: { "": "", "A": "离职", "B": "在职", "C": "转岗" }
+                         },
+                         editoptions: {
+                             'class': 'form-control',
+                             value: { "": "", "A": "离职", "B": "在职", "C": "转岗" }
+                         }
+                     }
+
+                ],
+                width: $('#Grid').width(),
+                //shrinkToFit: false,
+                height: 'auto',
+                multiselect: true,
+                rownumbers: true,
+                rownumWidth: 30,
+                rowNum: 15,
+                rowList: [15, 30, 45],
+                footerrow: false,
+                cellsubmit: 'clientArray',
+                pager: jQuery('#pager'),
+                cellEdit: true,
+                editurl: 'clientArray',
+                viewrecords: true,
+                gridComplete: function (id) {
+                    var rowNum = parseInt($(this).getGridParam("records"), 50);
+                    if (rowNum > 0) {
+                        $(".ui-jqgrid-sdiv").show();
+                    }
+                    else {
+                        $(".ui-jqgrid-sdiv").hide();
+                    }
+
+                    //fix the pager position
+                    $('#pager_left').css('width', '25%');
+                    $('#pager_right').css('width', '25%');
+
+                    $("[aria-describedby='grid_rn']").addClass("readonlycell");
+                },
+                ondblClickRow: function (rowid, iRow, iCol, e) {
+                }
+            });
+        }
+
+        function fn_SetGrid(mydata) {
+            mydata = mydata || [];
+            $('#gridDis').clearGridData()
+            .setGridParam({
+                data: mydata
+            }).trigger('reloadGrid');
+        }
+
+        function fn_SaveCell() {
+            var $t = $(this);
+            var $ecs = $(".edit-cell", $t);
+            $ecs.each(function (idx, ec) {
+                var iRow = $(ec).parent().index();
+                var iCol = $(ec).index();
+                $t.saveCell(iRow, iCol);
+            });
+        }
+    </script>
+}
+
+<div class="container-fluid">
+    <div class="row gap-top pull-right">
+        <button id="btnAdd" class="btn btn-primary">
+            <span class="fa fa-plus gap-icon"></span>添加岗位
+        </button>
+        <button id="btnDelete" class="btn btn-primary">
+            <span class="fa fa-minus gap-icon"></span>删除岗位
+        </button>
+    </div>
+    <div class="row gap-top">
+        <div class="col-xs-6">
+            <div class="input-group">
+                <span class="input-group-addon title-sm">姓名</span>
+                <input type="text" class="form-control" id="txtStuffName" />
+            </div>
+        </div>
+    </div>
+
+    <div class="row-fluid">
+        <div id="Grid" class="col-xs-12" style="margin-top:5px;">
+            <table id="grid" class="ui-jqgrid-htable"></table>
+            <div id="pager" class="page">
+            </div>
+        </div>
+    </div>
+    <div class="row gap-top text-center">
+        <button id="btnSave" class="btn btn-primary">
+            <span class="fa fa-save gap-icon"></span>保存
+        </button>
+    </div>
+</div>

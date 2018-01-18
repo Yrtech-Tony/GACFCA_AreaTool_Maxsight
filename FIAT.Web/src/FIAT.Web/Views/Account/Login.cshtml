@@ -1,0 +1,227 @@
+﻿@{
+    Layout = null;
+}
+
+@section HeadCss{
+    <link href="~/css/design/common.css" rel="stylesheet" />
+    <link href="~/css/design/style.css" rel="stylesheet" />
+}
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <title>广汽菲克经销商运营质量管理平台</title>
+    <link href="~/lib/bootstrap/dist/css/theme/bootstrap-cerulean.css" rel="stylesheet" />
+    <link href="~/css/wf.popup.css" rel="stylesheet" />
+    <link href="~/css/jquery.modaldialog.css" rel="stylesheet" />
+    <link href="~/css/site.css" rel="stylesheet" />
+    <link href="~/css/cssreset.css" rel="stylesheet" />
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script type="text/javascript">
+        $(function () {
+            $("#inputUserID").val(GetCookie("FIAT_USERNAME"));
+            $("#inputUserID").focus();
+            $("#btnLogin").click(function () {
+                Setcookie("FIAT_USERNAME", $("#inputUserID").val());
+            });
+            $("#inputUserID").focus(function () {
+                $("#spanMsg").html("&nbsp;");
+            });
+            $("#inputPassword").focus(function () {
+                $("#spanMsg").html("&nbsp;");
+            });
+            fn_rightNav();
+
+            $('.input_test').bind({
+                focus: function () {
+                    if (this.value == this.defaultValue) {
+                        this.value = "";
+                    }
+                },
+                blur: function () {
+                    if (this.value == "") {
+                        this.value = this.defaultValue;
+                    }
+                }
+            });
+
+            $("#btnReset").click(function () {
+                $("#divFindPassword").show();
+            });
+            $("#divFindPassword span,#btnClose").click(function () {
+                $("#divFindPassword").hide();
+            });
+        });
+
+        function fn_rightNav() {
+            var btb = $(".rightNav");
+            var tempS;
+            $(".rightNav").hover(function () {
+                var thisObj = $(this);
+                tempS = setTimeout(function () {
+                    thisObj.find("a").each(function (i) {
+                        var tA = $(this);
+                        setTimeout(function () {
+                            tA.animate({ right: "0" }, 300);
+                        }, 50 * i);
+                    });
+                }, 200);
+            }, function () {
+                if (tempS) {
+                    clearTimeout(tempS);
+                }
+                $(this).find("a").each(function (i) {
+                    var tA = $(this);
+                    setTimeout(function () {
+                        tA.animate({ right: "-110" }, 300, function () {
+                        });
+                    }, 50 * i);
+                });
+            });
+        }
+    </script>
+    <style type="text/css">
+        body {height: 100%;padding: 0px;}
+
+        .hotLine {
+            width: 100%;
+            text-align: center;
+            bottom: 0px;
+            margin-bottom: 10px;
+            position: fixed; /*color: #D0D0D0;*/
+            color: white;
+            right: 0;
+            left: 0;
+            font-size: 12pt;
+            font-family: inherit;
+            background: rgba(0,0,0,.4);
+            padding:5px 0px;
+        }
+        /*.hotLine p {background-color: #2595D3;filter: alpha(Opacity=80);-moz-opacity: 0.8;opacity: 0.8;}*/
+        /* rightNav */
+        .rightNav {
+            position: fixed;
+            top: 0;
+            right: 0;
+            z-index: 9999;
+            width: 140px;
+            cursor: pointer;
+            margin: 100px 0 0 0;
+        }
+
+        *html .rightNav {
+            position: absolute;
+            top: expression(eval(document.documentElement.scrollTop));
+        }
+
+            .rightNav a {
+                display: block;
+                position: relative;
+                height: 35px;
+                line-height: 35px;
+                margin-bottom: 2px; /*background: RGB(252,252,252);*/
+                padding-right: 10px;
+                width: 145px;
+                overflow: hidden;
+                cursor: pointer;
+                right: -110px;
+            }
+
+                .rightNav a:hover {
+                    text-decoration: none;
+                    color: #1974A1;
+                }
+
+                    .rightNav a:hover em { /*background: RGB(252,252,252);*/
+                    }
+
+                .rightNav a em {
+                    display: block;
+                    float: left;
+                    width: 30px;
+                    background: RGB(225,225,225);
+                    color: #fff;
+                    font-size: 16px;
+                    text-align: center;
+                    margin-right: 10px;
+                    font-style: normal;
+                }
+    </style>
+</head>
+<body>
+    <div class="wrapper linear">
+        <div class="container-fluid login_bg" style="position: fixed; width: 100%; z-index: 97;">
+
+            <div class="row">
+                <div class="col-md-4 hidden-xs">
+                        <img src="~/images/logo.png" width="200" height="70" style="margin-top:30px;margin-left: 30px"/>
+                </div>
+                <div class="col-md-4 col-lg-offset-3 col-md-offset-5 col-xs-offset-1 col-xs-11">
+                    <div class="login_con loginTop auto fix">
+                        @*<div class="fl login_logo hidden-xs">
+                                    <img src="~/images/Login/login_03.png" alt="" class="ml66" style="width:160px">
+                                    <img src="~/images/Login/login_13.png" alt="" class="ml33">
+                                <div class="ml33" style="text-align:center;">
+                                    <p class="logo_font_p1">广汽菲克</p>
+                                    <p class="logo_font_p2">经销商运营质量管理平台</p>
+                                    <br />
+                                    <p class="logo_font_p3">NETWORK OPERATION</p>
+                                    <p class="logo_font_p3">MANAGEMENT TOOLBOX</p>
+                                </div>
+                            </div>*@
+                        <div class="fl login_shuru loginbg">
+                            @*<div class="login_shurubt mb10" style="color:#DDD"><span class="kuai mr10"></span>用户登录
+                                </div>*@
+                            <div class="hidden-xs">
+                                <div class="login_shurubt mb10">@*<span class="kuai mr10"></span>*@广汽菲克经销商运营质量管理平台</div>
+                                <div class="logo_font_p3">GAC FCA NETWORK OPERATION MANAGEMENT TOOLBOX</div>
+                            </div>
+                            <div class="visible-xs" style="margin-left:-40px;">
+                                <div class="login_shurubt mb10">广汽菲克经销商运营质量管理平台</div>
+                                <div class="logo_font_p3" style="text-align:center;margin-bottom:40px;">GAC FCA NETWORK OPERATION MANAGEMENT TOOLBOX</div>
+                            </div>
+                            <div class="col-md-12" style="margin-bottom:10px">
+                                <span id="spanMsg" style="color: Red; float: right; clear: both;">&nbsp;@ViewBag.ErrorLoginMessage</span>
+                            </div>
+                            @using (Html.BeginForm("login", "Account", new { }, FormMethod.Post, true, new { @class = "form-horizontal", @role = "form" }))
+                            {
+                                @Html.TextBox("inputUserID", "", new { @class = "login_name input_test txtColor", placeholder = "Login", autocomplete = "off" })<br />
+                                @Html.Password("inputPassword", "", new { @class = "login_mima input_test txtColor", placeholder = "Password", autocomplete = "new-password" })<br />
+                                <button id="btnLogin" type="submit" class="login_yes mr20 col-sm-offset-0">登   录</button>
+                                <button id="btnReset" type="button" class="login_yes">找回密码</button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="navbar-fixed-bottom">
+            <div class="auto hotLine visible-lg">
+                <p>系统支持热线：010-84505518 （工作日9:00 - 18:00）</p>
+                <p>推荐使用谷歌Chrome(最佳)或火狐Firefox浏览器。 如使用IE浏览器请选择IE11.0及以上版本。如页面进入缓慢，请按F5刷新或清空缓存重试。</p>
+            </div>
+        </div>
+    </div>
+    <div id="divFindPassword" style="display:none;">
+        <div class="dialog-mask"></div>
+        <div class="dialog findPsw">
+            <div class="modal-header alert-warning" style="margin: 1px; cursor: move;">
+                <button type="button" class="close">
+                    <span aria-hidden="true">×</span>
+                    <span class="sr-only">关闭</span>
+                </button>
+                <h4 class="modal-title">找回密码</h4>
+            </div>
+            <div class="modal-body" style="max-height:500px; overflow:auto">
+                请使用公司邮箱，发送“找回密码+用户名”至：<span style="color:#0000FF">Toolbox_admin@163.com</span>,<br />
+                后台工作人员将在1个工作日内将密码发回；或致电010-84505518获得支持
+            </div>
+            <div class="modal-footer">
+                <input id="btnClose" type="button" value="关闭" class="btn btn-default btn-dialog-close">
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

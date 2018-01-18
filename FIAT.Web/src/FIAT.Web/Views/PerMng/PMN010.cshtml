@@ -1,0 +1,1535 @@
+﻿@{
+    Layout = "_LayoutMenu";
+    ViewData["Title"] = "人员登记";
+}
+<style type="text/css">
+    .decoration {
+        background-image: url('/images/x.gif');
+        background-repeat: no-repeat;
+        font-style: italic;
+        background-size: 100% 100%;
+    }
+
+    .required_style:before {
+        content: "* ";
+        color: red;
+    }
+   .ui-jqgrid tr.jqgrow td.prominence{
+        color:#4169E1;	
+        /*color:#7CB5EC;*/
+        /*font-weight:700;*/
+    }
+    
+    .ui-jqgrid .newrow{
+        background-color:#F8CBAD;
+    }
+</style>
+@section Scripts{
+    <script src="~/lib/spin.js"></script>
+    <!-- 1. Load -->
+    <script type="text/javascript">
+        var _grid, _gridName;
+        var busList = '';
+        var repList = [];
+        var _post;
+        var _YorN = { "是": "是", "否": "否" }
+        var _YorNorB = { "": "", "是": "是", "否": "否" }
+        var _searchType = false;
+        var _position;
+        $(document).ready(function () {
+            fn_Initial();
+            fn_InitialData();
+            //fn_GridInit();
+            //fn_BindYearMonth();
+            fn_setControlStatus(0);
+        });
+    </script>
+    <!-- 2. Init -->
+    <script type="text/javascript">
+        function fn_Initial() {
+
+            $("#files").change(function () {
+                $("#fileText").val($(this).val());
+                $("#upload").click();
+            })
+
+            _gridName = 'grid';
+            _grid = $('#' + _gridName);
+
+            $("#selBusLst").change(function () {
+                fn_SetRepData();
+                fn_GetPost();
+            });
+            $("#selRepLst").change(function () {
+                fn_SetZoneData();
+            });
+            $("#selZionLst").change(function () {
+                fn_SetAreaData();
+            });
+            $("#selAreaLst").change(function () {
+                fn_SetServerData();
+            });
+            $("#selPlanLst").change(function () {
+                fn_SetServerData();
+            });
+            $("#btnSearch").on("click", function () {
+                if (_searchType) {
+                    $.sa.confirm('点击查询，将刷新至本次初始数据状态，未点击保存键进行存储的修改操作将被放弃，确定要继续查询么？', {
+                        fnOk: function () {
+                           $(".close").click();
+                            fn_Search();
+                            fn_setControlStatus(0);
+                        }
+                    });
+                } else {
+                    fn_Search();
+                    fn_setControlStatus(0);
+                }
+            });
+
+            //开始检核
+            $("#btnStartCheck").on("click", function () {
+                //$("#selPlanLst").val($("#selPlanLst option:first").val());
+                if ($.trim($("#selPlanLst").val())==$.trim($("#selPlanLst option:first").val()))
+                    fn_StartCheck();
+                else {
+                    $.sa.warning("请选择当前巡检月份，并选择开始检核的经销商");
+                    $("#selPlanLst").focus();
+                    return;
+                }
+
+            });
+            //完成提交
+            $("#btnCommit").on("click", function () {
+                fn_Commit();
+            });
+
+            $("#btnAdd").on("click", function () {
+                fn_Addrow();
+            });
+
+            $("#btnDelete").on("click", function () {
+                fn_Delrow();
+            });
+
+            $("#btnTempDown").on("click", function () {
+                document.getElementById("aTemp").click();
+            });
+
+            $("#btnUpload").on("click", function () {
+                //if (!fn_ValidationForUpload()) {
+                //    return;
+                //} else {
+                $("#files").val("");
+                $('#files').click();
+                //}
+            });
+
+            $("#upload").click(function (evt) {
+                var fileUpload = $("#files").get(0);
+                var files = fileUpload.files;
+                var data = new FormData();
+                for (var i = 0; i < files.length ; i++) {
+                    data.append(files[i].name, files[i]);
+                }
+                data.append("Batch", $("#selPlanLst").val());
+                $.ajax({
+                    type: "POST",
+                    url: "/PerMng/UploadStaffAjax",
+                    contentType: false,
+                    processData: false,
+                    data: data,
+                    success: function (message) {
+                        if (JSON.parse(message).Success == true) {
+                            fn_ExcelUpload(message);
+                        } else {
+                            $.sa.warning("上传失败,请重试.");
+                        }
+                    },
+                    error: function () {
+                        $.sa.warning("上传失败,请重试.");
+                    }
+                });
+            });
+
+            $("#btnExportZone").on("click", function () {
+                if ($("#selBusLst").val() == null || $("#selBusLst").val() == "select") {
+                    $.sa.warning("请选择业务类型");
+                    $("#selBusLst").focus();
+                    return;
+                } else if ($("#selRepLst").val() == "select") {
+                    $.sa.warning("请选择大区");
+                    $("#selRepLst").focus();
+                    return;
+                } else if ($("#selZionLst").val() == "select") {
+                    $.sa.warning("请选择区域");
+                    $("#selZionLst").focus();
+                    return;
+                } else if ($("#selAreaLst").val() == "select") {
+                    $.sa.warning("请选择小区");
+                    $("#selAreaLst").focus();
+                    return;
+                } else if ($("#selPlanLst").val() == "select") {
+                    $.sa.warning("请选择巡检月份");
+                    $("#selPlanLst").focus();
+                    return;
+                } else {
+                    fn_downLoadZoneReport();
+                }
+            });
+        }
+    </script>
+    <!-- 3. InitData -->
+    <script type="text/javascript">
+        function fn_InitialData() {
+            $.sa.get(
+                 GETORGINFO
+                , { UserId: '@Context.Request.Cookies[SessionKeys.SESSION_USERID]' },
+              {
+                  "success": function (data) {
+                      busList = data.body;
+                      //$("#selBusLst").html(JsonToCboList("BName", "BId", JSON.parse(busList), { 'SelectType': 'Select' }));
+                      var option = "<option value='select'>- 请选择 -</option>";
+                      $.each(JSON.parse(busList), function (idx, ele) {
+                          option += "<option value='" + ele.BId + "' tag='" + ele.BCode + "'>" + ele.BName + "</option>";
+                      })
+                      $("#selBusLst").html(option)
+                      $("#selRepLst").html(JsonToCboList("EName", "EId", null, { 'SelectType': 'Select' }));
+                      $("#selZionLst").html(JsonToCboList("QName", "QId", null, { 'SelectType': 'Select' }));
+                      $("#selAreaLst").html(JsonToCboList("AName", "AId", null, { 'SelectType': 'Select' }));
+                      $("#selDisLst").html(JsonToCboList("Name", "Value", null, { 'SelectType': 'Select' }));
+                      //fn_SetRepData();
+                      //fn_SetZoneData();
+                      //fn_SetAreaData();
+                      fn_SetOrgControlStatus();
+                      fn_GetPost();
+                  },
+                  "failure": function (data, statusText, jqXHR) {
+                  }
+              });
+
+        }
+        //大区
+        function fn_SetRepData() {
+            var currentBus = $("#selBusLst").val();
+            $("#selRepLst").html(JsonToCboList("EName", "EId", null, { 'SelectType': 'Select' }));
+            $.each(JSON.parse(busList), function (i, v) {
+                if (v.BId == currentBus) {
+                    $("#selRepLst").html(JsonToCboList("EName", "EId", v.RepList, { 'SelectType': 'Select' }));
+                }
+            });
+            fn_SetZoneData();
+        }
+        //区域
+        function fn_SetZoneData() {
+            var currentBus = $("#selBusLst").val();
+            var currentRep = $("#selRepLst").val();
+            var data = JSON.parse(busList);
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].BId == currentBus) {
+                    repList = data[i].RepList;
+                    break;
+                }
+            }
+            $("#selZionLst").html(JsonToCboList("QName", "QId", null, { 'SelectType': 'Select' }));
+            $.each(repList, function (i, v) {
+                if (v.EId == currentRep) {
+                    $("#selZionLst").html(JsonToCboList("QName", "QId", v.ZionList, { 'SelectType': 'Select' }));
+                }
+            });
+            fn_SetAreaData();
+        }
+
+        //小区
+        function fn_SetAreaData() {
+            var currentRep = $("#selRepLst").val();
+            var currentZion = $("#selZionLst").val();
+            var zoneList = [];
+
+            for (var i = 0; i < repList.length; i++) {
+                if (repList[i].EId == currentRep) {
+                    zoneList = repList[i].ZionList;
+                    break;
+                }
+            }
+
+            $("#selAreaLst").html(JsonToCboList("AName", "AId", null, { 'SelectType': 'Select' }));
+            $.each(zoneList, function (i, v) {
+                if (v.QId == currentZion) {
+                    $("#selAreaLst").html(JsonToCboList("AName", "AId", v.AreaList, { 'SelectType': 'Select' }));
+                }
+            });
+        }
+        //经销商
+        function fn_SetServerData() {
+            //var currentBiz = $("#selBusLst").val();
+            //var currentRep = $("#selRepLst").val();
+            //var currentZion = $("#selZionLst").val();
+            //var currentArea = $("#selAreaLst").val();
+            //$("#selDisLst").html(JsonToCboList("SName", "SId", null, { 'SelectType': 'Select' }));
+
+            //$.each(JSON.parse(busList), function (ib, b) {
+            //    if (b.BId == currentBiz) {
+            //        $.each(b.RepList, function (ie, e) {
+            //            if (e.EId == currentRep) {
+            //                $.each(e.ZionList, function (iq, q) {
+            //                    if (q.QId == currentZion) {
+            //                        $.each(q.AreaList, function (ia, a) {
+            //                            if (a.AId == currentArea) {
+            //                                $("#selDisLst").html(JsonToCboList("SName", "SId", a.ServerList, { 'SelectType': 'Select' }));
+            //                            }
+            //                        });
+            //                    }
+            //                });
+            //            }
+            //        });
+            //    }
+            //});
+            $.sa.get(
+                        GETDISFORSTAFF
+                      , {
+                          bId: $("#selBusLst").val(),
+                          rId: $("#selRepLst").val(),
+                          zId: $("#selZionLst").val(),
+                          aId: $("#selAreaLst").val(),
+                          m: $("#selPlanLst").val(),
+                          dName:''
+                      },
+                    {
+                        "success": function (data) {
+                            if (data != null && data.body.length > 0) {
+                                $("#selDisLst").html(JsonToCboList("DisName", "DisId", JSON.parse(data.body), { 'SelectType': 'Select' }));
+                            } else {
+                                $("#selDisLst").html(JsonToCboList("DisName", "DisId", '', { 'SelectType': 'Select' }));
+                            }
+
+                        },
+                        "failure": function (data, statusText, jqXHR) {
+                        }
+                    }, $("body"));
+        }
+        // 查询岗位
+        function fn_GetPost() {
+            var busType = $("#selBusLst option:selected").attr("tag");
+            var groupCode = "20";
+            if (busType == "S" || busType == "M")
+                groupCode = "18";
+            else if (busType == "A")
+                groupCode = "19";
+
+            $.sa.get(TASKGETSTATUS, { GroupCode: groupCode },
+              {
+                  "success": function (data) {
+                      if ($("#selBusLst").val() === "select") {
+                          $("#selPostLst").html(JsonToCboList("Name", "Value", null, { 'SelectType': 'All' }));
+                          fn_BindYearMonth();
+                      } else {
+                          $("#selPostLst").html(JsonToCboList("Name", "Value", JSON.parse(data.body), { 'SelectType': 'All' }));
+                          fn_BindYearMonth();
+                      }
+                      _post = NameValueListToJson('Name', 'Value', JSON.parse(data.body), { 'SelectType': 'BLANK' });
+                      fn_GridInit();
+
+                      _grid.setColProp('PostCode', {
+                          formatoptions: {
+                              value: ""
+                          }, editoptions: {
+                              'class': 'form-control',
+                              value: ""
+                          }
+                      });
+                      _grid.setColProp('PostCode', {
+                          formatoptions: {
+                              value: _post
+                          }, editoptions: {
+                              'class': 'form-control',
+                              value: _post
+                          }
+                      });
+
+                  },
+                  "failure": function (data, statusText, jqXHR) {
+                  }
+              });
+
+        }
+
+
+        function fn_SetOrgControlStatus() {
+            var loginUserType = '@Context.Request.Cookies[SessionKeys.SESSION_USERTYPE]';
+            var OrgZionId = '@Context.Request.Cookies[SessionKeys.SESSION_ORGZIONID]';
+            var OrgAreaId = '@Context.Request.Cookies[SessionKeys.SESSION_ORGAREAID]';
+
+            $("#selZionLst").val("select");
+            $("#selAreaLst").val("select");
+            if (loginUserType == "B") {
+                if ($("#selBusLst").find("option").length >= 2) {
+                    $("#selBusLst").val($("#selBusLst").find("option").eq(1).val());
+                    fn_SetRepData();
+                }
+                $("#selBusLst").attr("disabled", "disabled");
+            } else if (loginUserType == "E") {
+                if ($("#selBusLst").find("option").length >= 2) {
+                    $("#selBusLst").val($("#selBusLst").find("option").eq(1).val());
+                    fn_SetRepData();
+                }
+                if ($("#selRepLst").find("option").length >= 2) {
+                    $("#selRepLst").val($("#selRepLst").find("option").eq(1).val());
+                    fn_SetZoneData();
+                }
+                $("#selBusLst").attr("disabled", "disabled");
+                $("#selRepLst").attr("disabled", "disabled");
+            } else if (loginUserType == 'R') {
+                if ($("#selBusLst").find("option").length >= 2) {
+                    $("#selBusLst").val($("#selBusLst").find("option").eq(1).val());
+                    fn_SetRepData();
+                }
+                if ($("#selRepLst").find("option").length >= 2) {
+                    $("#selRepLst").val($("#selRepLst").find("option").eq(1).val());
+                    fn_SetZoneData();
+                }
+                $("#selBusLst").attr("disabled", "disabled");
+                $("#selRepLst").attr("disabled", "disabled");
+                $("#selZionLst").val(OrgZionId);
+                fn_SetAreaData();
+                $("#selZionLst").attr("disabled", "disabled");
+            } else if (loginUserType == 'Z') {
+                if ($("#selBusLst").find("option").length >= 2) {
+                    $("#selBusLst").val($("#selBusLst").find("option").eq(1).val());
+                    fn_SetRepData();
+                }
+                if ($("#selRepLst").find("option").length >= 2) {
+                    $("#selRepLst").val($("#selRepLst").find("option").eq(1).val());
+                    fn_SetZoneData();
+                }
+                $("#selBusLst").attr("disabled", "disabled");
+                $("#selRepLst").attr("disabled", "disabled");
+                $("#selZionLst").val(OrgZionId);
+                $("#selZionLst").val(OrgZionId); selRepLst
+                fn_SetAreaData();
+                $("#selAreaLst").val(OrgAreaId);
+                $("#selZionLst").attr("disabled", "disabled");
+                $("#selAreaLst").attr("disabled", "disabled");
+            }
+            //fn_SetServerData();
+        }
+        function fn_BindYearMonth() {
+            var yearMonth = fn_GetYearMonth().reverse();
+            var buzType = '@Context.Request.Cookies[SessionKeys.SESSION_ORGBIZTYPE]';
+            if ($("#selBusLst").val() === "select") {
+                $("#selPlanLst").html(JsonToCboList("Name", "Value", "", { 'SelectType': 'Select' }));
+            }
+            else if (buzType == 'S' || $("#selBusLst option:selected").attr("tag") == 'S' || buzType == 'M' || $("#selBusLst option:selected").attr("tag") == 'M' || buzType == 'T' || $("#selBusLst option:selected").attr("tag") == 'T') {
+                var d = yearMonth.reverse();
+                d.pop();
+                $("#selPlanLst").html(JsonToCboList("Name", "Value", d));
+            }
+            else {
+                var data = [];
+                //Modify by dong.limin 2018-1-4 10:51:53
+                if (yearMonth.length > 8) {
+                    //2017年客服巡检月份组合规律：04~05,06~07,08~09,10~11,12~01
+                    for (var i = 0; i < 9; i += 2) {
+                        var text = yearMonth[i].Name;
+                        data.push({ "Name": text + '~' + fn_GetNextMonth(text.slice(4)), "Value": yearMonth[i].Value });
+                    }
+                    //2018年客服巡检月份组合规律：01~02,03~04,05~06
+                    for (var i = 9; i < yearMonth.length; i += 2) {
+                        var text = yearMonth[i].Name;
+                        data.push({ "Name": text + '~' + fn_GetNextMonth(text.slice(4)), "Value": yearMonth[i].Value });
+                    }
+                } else {
+                    //2017年客服巡检月份组合规律：04~05,06~07,08~09,10~11,12~01
+                    for (var i = 0; i < yearMonth.length; i += 2) {
+                        var text = yearMonth[i].Name;
+                        data.push({ "Name": text + '~' + fn_GetNextMonth(text.slice(4)), "Value": yearMonth[i].Value });
+                    }
+                }
+                $("#selPlanLst").html(JsonToCboList("Name", "Value", data.reverse()));
+            }
+            fn_SetServerData();
+        }
+        function fn_GetNextMonth(m){
+            var month=parseInt(m);
+            return  month+1==13?'01':month+1==12?'12':'0'+(month+1);
+        
+        }
+    </script>
+
+    <!--Validation-->
+    <script>
+        function fn_ValidationBeforeSave() {
+            fn_SaveCell.call(_grid);
+            var editData = _grid.jqGrid("getRowData");
+            if (editData.length == 0) {
+                $.sa.warning("没有要保存的数据!");
+                return false;
+            } else if ($("#selPlanLst").val() == "select") {
+                $.sa.warning("请选择期次！");
+                $("#selPlanLst").focus();
+                return false;
+            } else if ($("#selDisLst").val() == "select") {
+                $.sa.warning("请选择经销商！");
+                $("#selDisLst").focus();
+                return false;
+            } else {
+                $.each(editData, function (idx, item) {
+                    if ($.trim(item.PostCode) == "") {
+                        $.sa.warning("请选择岗位!");
+                        return false;
+                    }
+                })
+            }
+            return true;
+        }
+        function fn_ValidationForUpload() {
+            if ($("#selBusLst").val() == null || $("#selBusLst").val() == "select") {
+                $.sa.warning("请选择业务类型！");
+                $("#selBusLst").focus();
+                return false;
+            } else if ($("#selRepLst").val() == "select") {
+                $.sa.warning("请选择大区！");
+                $("#selRepLst").focus();
+                return false;
+            } else if ($("#selZionLst").val() == "select") {
+                $.sa.warning("请选择区域！");
+                $("#selZionLst").focus();
+                return false;
+            } else if ($("#selAreaLst").val() == "select") {
+                $.sa.warning("请选择小区！");
+                $("#selAreaLst").focus();
+                return false;
+            } else if ($("#selPlanLst").val() == "select") {
+                $.sa.warning("请选择巡检月份！");
+                $("#selPlanLst").focus();
+                return false;
+            } else if ($("#selDisLst").val() == "select") {
+                $.sa.warning("请选择经销商！");
+                $("#selDisLst").focus();
+                return false;
+            }
+            return true;
+        }
+
+        function fn_ValidationForCheck() {
+            if ($("#selBusLst").val() == null || $("#selBusLst").val() == "select") {
+                $.sa.warning("请选择业务类型！");
+                $("#selBusLst").focus();
+                return false;
+            } else if ($("#selRepLst").val() == "select") {
+                $.sa.warning("请选择大区！");
+                $("#selRepLst").focus();
+                return false;
+            } else if ($("#selZionLst").val() == "select") {
+                $.sa.warning("请选择区域！");
+                $("#selZionLst").focus();
+                return false;
+            } else if ($("#selAreaLst").val() == "select") {
+                $.sa.warning("请选择小区！");
+                $("#selAreaLst").focus();
+                return false;
+            } else if ($("#selDisLst").val() == "select") {
+                $.sa.warning("请选择经销商！");
+                $("#selDisLst").focus();
+                return false;
+            }
+            return true;
+        }
+
+        function fn_ValidationForCommit() {
+            fn_SaveCell.call(_grid);
+            var editData = _grid.jqGrid("getRowData");
+            if (_searchType == false) {
+                $.sa.warning("请点击开始检核");
+                return false;
+            }
+            if (editData.length == 0) {
+                $.sa.warning("没有要保存的数据");
+                return false;
+            }
+            var reg = /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)|(^[A-Z][0-9]{6}\([0-9A-Z]\)$)|(^[0-9]{7}\([0-9]\)$)|(^[A-Z][0-9]{9}$)/;
+
+            for (var i = 0; i < editData.length; i++) {
+                if (editData[i].RowStatus != "D") {
+                    var bizTypelogin = "@Context.Request.Cookies[SessionKeys.SESSION_ORGBIZTYPE]";
+                    if (editData[i].PostCode == "") {
+                        $.sa.warning("请选择岗位");
+                        return false;
+                    } else if (editData[i].Name == "") {
+                        $.sa.warning("请填写姓名");
+                        return false;
+                    } else if (editData[i].RowStatus=="I"&&!reg.test(editData[i].IDNo)) {
+                        $.sa.warning("请填写正确的身份证号");
+                        return false;
+                    } else if (editData[i].Status == "") {
+                        $.sa.warning("请选择状态");
+                        return false;
+                    } else if (editData[i].DMSYN == "") {
+                        $.sa.warning("是否DMS备案项目不能为空");
+                        return false;
+                    } else if (editData[i].AuthenticateYN == "") {
+                        $.sa.warning("是否通过认证项目不能为空");
+                        return false;
+                    } else if (bizTypelogin != "S" && bizTypelogin != "M" && editData[i].LevelM2 == "") {
+                        $.sa.warning("机电等级项目不能为空");
+                        return false;
+                    } else if (bizTypelogin != "S" && bizTypelogin != "M" && editData[i].LevelM1 == "") {
+                        $.sa.warning("技术主管等级不能为空");
+                        return false;
+                    } else if (editData[i].PartTimeJobYN == "是" && (editData[i].PartTimeJob1 == "" && editData[i].PartTimeJob2 == "" && editData[i].PartTimeJob3 == "")) {
+                        $.sa.warning("设置了岗位兼职，请至少选择一个岗位名称");
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+    </script>
+    <!--4 customer Method-->
+    <script>
+
+        function fn_Search() {
+            if (!fn_ValidationForUpload()) {
+                return;
+            } else {
+                $.sa.get(
+                        GETSTAFFANDPOSTINFO
+                      , { BusType: $("#selBusLst").val(), DisId: $("#selDisLst").val(), PostCode: $("#selPostLst").val(), YearMonth: $("#selPlanLst").val() },
+                    {
+                        "success": function (data) {
+                            _searchType = false;
+                            fn_SetGrid(JSON.parse(data.body));
+                            $.sa.alert("查询完毕！");
+
+                        },
+                        "failure": function (data, statusText, jqXHR) {
+                            $.sa.warning("查询失败！");
+                        }
+                    }, $("body"));
+            }
+        }
+
+        function fn_StartCheck() {
+            if (!fn_ValidationForCheck()) {
+                return;
+            } else {
+                $.sa.get(
+                           STARTCHECKSTAFF
+                         , { BusType: $("#selBusLst").val(), DisId: $("#selDisLst").val(), YearMonth: $("#selPlanLst option:first").val(), PostCode: $("#selPostLst").val() },
+                       {
+                           "success": function (data) {
+                               _searchType = true;
+                               init();
+                               _grid.jqGrid("clearGridData");
+                               fn_SetGrid(JSON.parse(data.body));
+                               fn_setControlStatus(1);
+                               var item = { YearMonth: $("#selPlanLst option:first").val(), DisId: $("#selDisLst").val(), BusType: $("#selBusLst").val(), UserId: '@Context.Request.Cookies[SessionKeys.SESSION_USERID]', Position: _position, StaffInfoList: JSON.parse(data.body), SaveNode: '' };
+                               $.sa.post(
+                                UPDATESTAFFINFO,
+                                 JSON.stringify(item),
+                                 {
+                                     "success": function (data) {
+                                         if (data != null && data.msg == "") {
+                                             //$.sa.warning("检核已开始！");
+                                         } else {
+                                             $.sa.warning("开始检核操作失败，请重试！");
+                                         }
+                                     },
+                                     "failure": function (data, statusText, jqXHR) {
+                                         if (data.msg.lastIndexOf("duplicate key") > 0 || data.msg.lastIndexOf("MERGE") > 0) {
+                                             $.sa.warning("身份证号不能重复，保存失败！");
+                                         } else {
+                                             $.sa.warning(data.msg);
+                                         }
+                                     }
+                                 });
+                           },
+                           "failure": function (data, statusText, jqXHR) {
+                               $.sa.warning("查询失败！");
+                           }
+                       }, $("body"));
+            }
+        }
+
+        function fn_Commit() {
+            if (!fn_ValidationForCommit()) {
+                return;
+            } else {
+                var editData = _grid.jqGrid("getRowData");
+                var item = { YearMonth: $("#selPlanLst option:first").val(), DisId: $("#selDisLst").val(), BusType: $("#selBusLst").val(), UserId: '@Context.Request.Cookies[SessionKeys.SESSION_USERID]', Position: _position, StaffInfoList: editData, SaveNode: 'S' };
+                $.sa.confirm('是否确定完成提交？', {
+                    fnOk: function () {
+                        $(".close").click();
+                        $.sa.post(
+                         UPDATESTAFFINFO,
+                          JSON.stringify(item),
+                          {
+                              "success": function (data) {
+                                  if (data != null && data.msg == "") {
+                                      $.sa.warning("保存成功！");
+                                      fn_Search();
+                                      fn_setControlStatus(0);
+                                  } else {
+                                      $.sa.warning("保存失败！");
+                                  }
+                              },
+                              "failure": function (data, statusText, jqXHR) {
+                                  if (data.msg.lastIndexOf("duplicate key") > 0 || data.msg.lastIndexOf("MERGE") > 0) {
+                                      $.sa.warning("身份证号不能重复，保存失败！");
+                                  } else {
+                                      $.sa.warning(data.msg);
+                                  }
+                              }
+                          });
+                    }
+                });
+            }
+
+
+        }
+
+        function fn_ExcelUpload(obj) {
+            var staff = JSON.parse(JSON.parse(obj).Result).Staff;
+            staff.splice(0, 1);
+            //var item = { YearMonth: $("#selPlanLst").val(), DisId: $("#selDisLst").val(), BusType: $("#selBusLst").val(), UserId: '@Context.Request.Cookies[SessionKeys.SESSION_USERID]', StaffInfoList: staff };
+            var item = { UserId: '@Context.Request.Cookies[SessionKeys.SESSION_USERID]', StaffInfoList: staff };
+            $.sa.post(
+                STAFFINFOREG,
+                          JSON.stringify(item),
+                          {
+                              "success": function (data) {
+                                  if (data != null && data.msg == "") {
+                                      $.sa.warning("保存成功！");
+                                  } else {
+                                      $.sa.warning("保存失败！");
+                                  }
+                              },
+                              "failure": function (data, statusText, jqXHR) {
+                                  if (data.msg.lastIndexOf("duplicate key") > 0 || data.msg.lastIndexOf("MERGE") > 0) {
+                                      $.sa.warning("身份证号不能重复，保存失败！");
+                                  } else {
+                                      $.sa.warning(data.msg);
+                                  }
+
+                              }
+                          }, $("body"));
+        }
+
+        function fn_downLoadZoneReport() {
+            var yearMonth = $("#selPlanLst").val();
+            var bName = $("#selRepLst option:selected").text();
+            var areaName = $("#selZionLst option:selected").text();
+            var zoneName = $("#selAreaLst option:selected").text();
+            var batchName = $("#selPlanLst option:selected").text();
+            var zoneId = $("#selAreaLst").val();
+            var busType = $("#selBusLst").val();
+
+            var opts = {
+                type: "Image",
+                imageUrl: "/images/ajax-loader.gif",
+                lines: 10, // loading小块的数量
+                length: 0, // 小块的长度
+                width: 18, // 小块的宽度
+                radius: 40, // 整个圆形的半径
+                corners: 1, // 小块的圆角，越大则越圆
+                rotate: 10, // loading动画的旋转度数，貌似没什么实际作用
+                color: '#047EC4', // 颜色
+                speed: 1, // 变换速度
+                trail: 60, // 余晖的百分比
+                shadow: false, // 是否渲染出阴影
+                hwaccel: false, // 是否启用硬件加速
+                className: 'spinner', // 给loading添加的css样式名
+                zIndex: 2e9, // The z-index (defaults to 2000000000)
+                top: '50%', // Top position relative to parent in px
+                left: '50%' // Left position relative to parent in px
+            };
+            var spinner = new Spinner(opts).spin(document.getElementById('loadBar'));
+
+            $.ajax({
+                type: "POST",
+                url: "/PerMng/StaffAjaxDown?yearMonth=" + yearMonth + "&bName=" + bName + "&areaName=" + areaName + "&zoneName=" + zoneName + "&batchName=" + batchName + "&zoneId=" + zoneId + "&busType=" + busType,
+                contentType: false,
+                processData: false,
+                success: function (message) {
+                    document.getElementById("ad").href = "/Template/" + message.split('\\')[message.split('\\').length - 1];
+                    document.getElementById("ad").click();
+                },
+                beforeSend: function () {
+                    $("#modal-container-loadbar").css("display", "block");
+                    spinner.spin(document.getElementById('loadBar'));
+                },
+                complete: function () {
+                    spinner.stop();
+                    $("#modal-container-loadbar").css("display", "none");
+                },
+                error: function () {
+                    $.sa.warning("下载失败,请重试.");
+                }
+            });
+        }
+
+        function fn_GetYearMonth() {
+            var diff = '@ViewBag.Diff';
+            var currentYear = '@ViewBag.CurrentYear';
+            var currentMonth = '@ViewBag.CurentMonth';
+            var dates = [];
+            for (var i = 0; i < (diff > 36 ? 36 : diff) ; i++) {
+                var date = "";
+                if (currentMonth < 1) {
+                    currentYear--;
+                    currentMonth = 12;
+                    date = currentYear + "" + fn_Fixten(currentMonth);
+                } else if (currentMonth >= 1) {
+                    date = currentYear + "" + fn_Fixten(currentMonth);
+                }
+                currentMonth--;
+                dates.push({ "Name": date, "Value": date });
+            }
+            return dates;
+        }
+        function fn_Fixten(i) {
+            if (i < 10) {
+                return "0" + i;
+            } else {
+                return i;
+            }
+        }
+        function fn_Addrow() {
+            var ids = _grid.getDataIDs();
+            var pref = $.jgrid.uidPref;
+            var newid = 1;
+            if (ids && ids.length > 0) {
+                var regx = new RegExp(pref, 'g');
+                var nids = ids.join(',').replace(regx, '').split(',');
+                var maxid = Math.max.apply(Math, nids);
+                newid = maxid + 1;
+            }
+            newid = pref + (newid).toString();
+            var rowdata = {
+                RowStatus: "I"
+            };
+            _grid.addRowData(newid, rowdata, 'last');
+            $(_grid.getGridRowById(newid)).addClass("edited");
+            $(_grid.getGridRowById(newid)).focus();
+        }
+
+        function fn_Delrow() {
+            var ids = _grid.jqGrid('getGridParam', 'selarrrow');
+            if (ids.length <= 0) {
+                $.sa.warning("请选择要删除的行。", {
+                    fnClose: function () {
+                    }
+                });
+                return;
+            }
+            for (var i = ids.length - 1; i >= 0; i--) {
+                if (_grid.getCell(ids[i], "RowStatus") != "I") {
+
+                    _grid.setCell(ids[i], "RowStatus", "D");
+                    $(_grid.getGridRowById(ids[i])).addClass("decoration");
+                    $(_grid.getGridRowById(ids[i])).addClass("edited");
+                }
+                else {
+                    _grid.delRowData(ids[i]);
+                }
+            }
+        }
+        var checkno = function (val, nm) {
+            var reg = /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)|(^[A-Z][0-9]{6}\([0-9A-Z]\)$)|(^[0-9]{7}\([0-9]\)$)|(^[A-Z][0-9]{9}$)/;
+            if (!reg.test(val)) {
+                return [false, "请填写正确的身份证号", ""];
+            }
+            return [true, ""];
+        }
+        var checkname = function (val, nm) {
+            var reg = /(^[\u4e00-\u9fa5]*$)/;
+            if (!reg.test(val)) {
+                return [false, "请填写中文名", ""];
+            }
+            return [true, ""];
+        }
+
+        function fn_setControlStatus(type) {
+            if (type === 0) {
+                $("#btnAdd").addClass("hidden");
+                $("#btnDelete").addClass("hidden");
+            } else {
+                $("#btnAdd").removeClass("hidden");
+                $("#btnDelete").removeClass("hidden");
+            }
+            var userType = '@Context.Request.Cookies[SessionKeys.SESSION_USERTYPE]'
+            //if (userType == "A") {
+            //    $("#btnTempDown").removeClass("hidden");
+            //    $("#btnUpload").removeClass("hidden");
+            //} else {
+            //    $("#btnTempDown").addClass("hidden");
+            //    $("#btnUpload").addClass("hidden");
+            //}
+            if (userType == 'Z') {
+                $("#btnStartCheck").removeClass("hidden");
+                $("#btnCommit").removeClass("hidden");
+            } else {
+                $("#btnStartCheck").addClass("hidden");
+                $("#btnCommit").addClass("hidden");
+            }
+
+        }
+
+    </script>
+    <!--Grid-->
+    <script type="text/javascript">
+        function fn_GridInit() {
+            _grid.jqGrid({
+                datatype: 'local',
+                colModel: [
+                    {
+                        name: 'PostCode', label: '岗位', width: 100, align: 'left', editable: true
+                         , edittype: 'select'
+                         , formatter: 'select',
+                        formatoptions: {
+                            value: _post
+                        },
+                        editoptions: {
+                            'class': 'form-control',
+                            value: _post
+                        }
+                        //, sortable: false
+                        ,
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            if (rawObject.RowStatus == "I")
+                                return 'class="newrow"';
+                        }
+                    },
+                    {
+                        name: 'Name', label: '姓名', width: 60, align: 'left', editable: true, editrules: {
+                            edithidden: true,
+                            custom: true,
+                            custom_func: checkname
+                        },
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            if (rawObject.RowStatus == "I")
+                                return 'class="newrow"';
+                            else
+                                return 'class="prominence"';
+                        }
+                    },
+                    {
+                        name: 'IDNo', label: '身份证号', width: 140, align: 'center', editable: true, editrules: {
+                            edithidden: true,
+                            custom: true,
+                            custom_func: checkno
+                        },
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            if (rawObject.RowStatus == "I")
+                                return 'class="newrow"';
+                            else
+                            return 'class="prominence"';
+                        }
+
+                    },
+                     {
+                         name: 'Status', label: '状态', width: 80, editable: true, edittype: "text", align: 'center', editable: true
+                         , edittype: 'select'
+                         , formatter: 'select',
+                         formatoptions: {
+                             value: { "在岗": "在岗", "离职": "离职" }
+                         },
+                         editoptions: {
+                             'class': 'form-control',
+                             value: { "在岗": "在岗", "离职": "离职" }
+                         }
+                        ,
+                         cellattr: function (rowId, val, rawObject, cm, rdata) {
+                             if (rawObject.RowStatus == "I")
+                                 return 'class="newrow"';
+                         }
+                     }, {
+                         name: 'DMSYN', label: '是否<br/>DMS备案', width: 70, align: 'center', editable: true
+                         , edittype: 'select'
+                         , formatter: 'select',
+                         formatoptions: {
+                             value: _YorN
+                         },
+                         editoptions: {
+                             'class': 'form-control',
+                             value: _YorN
+                         }
+                        ,
+                         cellattr: function (rowId, val, rawObject, cm, rdata) {
+                             if (rawObject.RowStatus == "I")
+                                 return 'class="newrow"';
+                         }
+                     },
+                     {
+                         name: 'AuthenticateYN', label: '是否<br/>通过认证', width: 68, align: 'center', editable: true
+                         , edittype: 'select'
+                         , formatter: 'select',
+                         formatoptions: {
+                             value: _YorNorB
+                         },
+                         editoptions: {
+                             'class': 'form-control',
+                             value: _YorNorB
+                         }
+                        ,
+                         cellattr: function (rowId, val, rawObject, cm, rdata) {
+                             if (rawObject.RowStatus == "I")
+                                 return 'class="newrow"';
+                         }
+
+                     },
+                     {
+                         name: 'LevelM2', label: '机电等级', width: 70, align: 'center', editable: true
+                         , edittype: 'select'
+                         , formatter: 'select',
+                         formatoptions: {
+                             value: { "-": "-", "L0": "L0", "L1": "L1", "L2": "L2", "L3": "L3" }//, "无机电等级": "无机电等级" 
+                         },
+                         editoptions: {
+                             'class': 'form-control',
+                             value: { "-": "-", "L0": "L0", "L1": "L1", "L2": "L2", "L3": "L3" }//, "无机电等级": "无机电等级" 
+                         }
+                        ,
+                         cellattr: function (rowId, val, rawObject, cm, rdata) {
+                             if (rawObject.RowStatus == "I")
+                                 return 'class="newrow"';
+                         }
+                     }
+                    , {
+                        name: 'LevelM1', label: '技术主管等级', width: 90, align: 'center', editable: true
+                         , edittype: 'select'
+                         , formatter: 'select',
+                        formatoptions: {
+                            value: { "-": "-", "初级技术主管": "初级技术主管", "高级技术主管": "高级技术主管" }//, "无技术主管等级": "无技术主管等级"
+                        },
+                        editoptions: {
+                            'class': 'form-control',
+                            value: { "-": "-", "初级技术主管": "初级技术主管", "高级技术主管": "高级技术主管" }//, "无技术主管等级": "无技术主管等级"
+                        }
+                        ,
+                        cellattr: function (rowId, val, rawObject, cm, rdata) {
+                            if (rawObject.RowStatus == "I")
+                                return 'class="newrow"';
+                        }
+                    },
+                            {
+                                name: 'PartTimeJobYN', label: '是否兼职', width: 70, align: 'center', editable: true
+                                 , edittype: 'select'
+                                 , formatter: 'select',
+                                formatoptions: {
+                                    value: _YorN
+                                },
+                                editoptions: {
+                                    'class': 'form-control',
+                                    value: _YorN,
+                                    dataEvents: [{
+                                        type: 'change', fn: function (e) {
+                                            var val = $(this).val();
+                                            var rowid = $(this).parent().parent()[0].id;
+                                            if (val == "否") {
+                                                $("#grid").jqGrid("setCell", rowid, "PartTimeJob1", "1");
+                                                $("#grid").jqGrid("setCell", rowid, "DMSYN1", "1");
+                                                $("#grid").jqGrid("setCell", rowid, "AuthenticateYN1", "1");
+                                                $("#grid").jqGrid("setCell", rowid, "PartTimeJob2", "1");
+                                                $("#grid").jqGrid("setCell", rowid, "DMSYN2", "1");
+                                                $("#grid").jqGrid("setCell", rowid, "AuthenticateYN2", "1");
+                                                $("#grid").jqGrid("setCell", rowid, "PartTimeJob3", "1");
+                                                $("#grid").jqGrid("setCell", rowid, "DMSYN3", "1");
+                                                $("#grid").jqGrid("setCell", rowid, "AuthenticateYN3", "1");
+                                            }
+                                        }
+                                    }]
+                                }
+                        ,
+                                cellattr: function (rowId, val, rawObject, cm, rdata) {
+                                    if (rawObject.RowStatus == "I")
+                                        return 'class="newrow"';
+                                }
+                            },
+                            {
+                                name: 'PartTimeJob1', label: '兼职岗位1', width: 100, editable: false, align: 'left'
+                         , edittype: 'select'
+                         , formatter: 'select',
+                                formatoptions: {
+                                    value: _post
+                                },
+                                editoptions: {
+                                    'class': 'form-control',
+                                    value: _post
+                                }
+                        ,
+                                cellattr: function (rowId, val, rawObject, cm, rdata) {
+                                    if (rawObject.RowStatus == "I")
+                                        return 'class="newrow"';
+                                }
+                            },
+                            {
+                                name: 'DMSYN1', label: '是否<br/>DMS备案1', width: 70, editable: false, align: 'center'
+                                 , edittype: 'select'
+                                 , formatter: 'select',
+                                formatoptions: {
+                                    value: _YorN
+                                },
+                                editoptions: {
+                                    'class': 'form-control',
+                                    value: _YorN
+                                }
+                        ,
+                                cellattr: function (rowId, val, rawObject, cm, rdata) {
+                                    if (rawObject.RowStatus == "I")
+                                        return 'class="newrow"';
+                                }
+                            },
+                            {
+                                name: 'AuthenticateYN1', label: '是否<br/>通过认证1', width: 68, editable: false, align: 'center'
+                         , edittype: 'select'
+                         , formatter: 'select',
+                                formatoptions: {
+                                    value: _YorNorB
+                                },
+                                editoptions: {
+                                    'class': 'form-control',
+                                    value: _YorNorB
+                                }
+                        ,
+                                cellattr: function (rowId, val, rawObject, cm, rdata) {
+                                    if (rawObject.RowStatus == "I")
+                                        return 'class="newrow"';
+                                }
+                            },
+                            {
+                                name: 'PartTimeJob2', label: '兼职岗位2', width: 100, editable: false, align: 'left'
+                         , edittype: 'select'
+                         , formatter: 'select',
+                                formatoptions: {
+                                    value: _post
+                                },
+                                editoptions: {
+                                    'class': 'form-control',
+                                    value: _post
+                                }
+                        ,
+                                cellattr: function (rowId, val, rawObject, cm, rdata) {
+                                    if (rawObject.RowStatus == "I")
+                                        return 'class="newrow"';
+                                }
+                            },
+                            {
+                                name: 'DMSYN2', label: '是否<br/>DMS备案2', width: 70, editable: false, align: 'center'
+                         , edittype: 'select'
+                         , formatter: 'select',
+                                formatoptions: {
+                                    value: _YorN
+                                },
+                                editoptions: {
+                                    'class': 'form-control',
+                                    value: _YorN
+                                }
+                        ,
+                                cellattr: function (rowId, val, rawObject, cm, rdata) {
+                                    if (rawObject.RowStatus == "I")
+                                        return 'class="newrow"';
+                                }
+                            },
+                            {
+                                name: 'AuthenticateYN2', label: '是否<br/>通过认证2', width: 68, editable: false, align: 'center'
+                                 , edittype: 'select'
+                                 , formatter: 'select',
+                                formatoptions: {
+                                    value: _YorNorB
+                                },
+                                editoptions: {
+                                    'class': 'form-control',
+                                    value: _YorNorB
+                                }
+                        ,
+                                cellattr: function (rowId, val, rawObject, cm, rdata) {
+                                    if (rawObject.RowStatus == "I")
+                                        return 'class="newrow"';
+                                }
+                            },
+                            {
+                                name: 'PartTimeJob3', label: '兼职岗位3', width: 80, editable: false, align: 'left'
+                                   , edittype: 'select'
+                         , formatter: 'select',
+                                formatoptions: {
+                                    value: _post
+                                },
+                                editoptions: {
+                                    'class': 'form-control',
+                                    value: _post
+                                }
+                        ,
+                                cellattr: function (rowId, val, rawObject, cm, rdata) {
+                                    if (rawObject.RowStatus == "I")
+                                        return 'class="newrow"';
+                                }
+
+                            },
+                            {
+                                name: 'DMSYN3', label: '是否<br/>DMS备案3', width: 70, editable: false, align: 'center'
+                                 , edittype: 'select'
+                                 , formatter: 'select',
+                                formatoptions: {
+                                    value: _YorN
+                                },
+                                editoptions: {
+                                    'class': 'form-control',
+                                    value: _YorN
+                                }
+                        ,
+                                cellattr: function (rowId, val, rawObject, cm, rdata) {
+                                    if (rawObject.RowStatus == "I")
+                                        return 'class="newrow"';
+                                }
+                            },
+                            {
+                                name: 'AuthenticateYN3', label: '是否<br/>通过认证3', width: 68, editable: false, align: 'center'
+                         , edittype: 'select'
+                         , formatter: 'select',
+                                formatoptions: {
+                                    value: _YorNorB
+                                },
+                                editoptions: {
+                                    'class': 'form-control',
+                                    value: _YorNorB
+                                }
+                        ,
+                                cellattr: function (rowId, val, rawObject, cm, rdata) {
+                                    if (rawObject.RowStatus == "I")
+                                        return 'class="newrow"';
+                                }
+                            }, {
+                                name: 'RowStatus', label: 'RowStatus', width: 100, hidden: true
+                            }, {
+                                name: 'OIDNo', hidden: true
+                            }
+                ],
+                width: $('#Grid').width(),
+                height: '450',
+                shrinkToFit: false,
+                rownumbers: true,
+                multiselect: true,
+                rownumWidth: 50,
+                rowNum: 10000,
+                //rowList: [15, 30, 100],
+                pginput: false,
+                pgbuttons:false,
+                footerrow: false,
+                cellsubmit: 'clientArray',
+                pager: jQuery('#pager'),
+                cellEdit: true,
+                //scroll: true,
+                editurl: 'clientArray',
+                viewrecords: true,
+                gridComplete: function (id) {
+                    //fix the pager position
+                    $('#pager_left').css('width', '25%');
+                    $('#pager_right').css('width', '25%');
+
+                    $("[aria-describedby='grid_rn']").addClass("readonlycell");
+                },
+                onCellSelect: function (rowid, iCol, cellcontent, e) {
+                    var rowdata = $("#grid").jqGrid('getRowData', rowid);
+                    var editableYN = false;
+                    if (_searchType == true && rowdata.PartTimeJobYN == "是") {
+                        editableYN = true;
+                    } else {
+                        editableYN = false;
+                    }
+                    $("#grid").setColProp('PartTimeJob1', { 'editable': editableYN });
+                    $("#grid").setColProp('DMSYN1', { 'editable': editableYN });
+                    $("#grid").setColProp('AuthenticateYN1', { 'editable': editableYN });
+                    $("#grid").setColProp('PartTimeJob2', { 'editable': editableYN });
+                    $("#grid").setColProp('DMSYN2', { 'editable': editableYN });
+                    $("#grid").setColProp('AuthenticateYN2', { 'editable': editableYN });
+                    $("#grid").setColProp('PartTimeJob3', { 'editable': editableYN });
+                    $("#grid").setColProp('DMSYN3', { 'editable': editableYN });
+                    $("#grid").setColProp('AuthenticateYN3', { 'editable': editableYN });
+
+                    if (_searchType == true && rowdata.PartTimeJobYN == "否") {
+                        $("#grid").jqGrid("setCell", rowid, "PartTimeJob1", "1");
+                        $("#grid").jqGrid("setCell", rowid, "DMSYN1", "1");
+                        $("#grid").jqGrid("setCell", rowid, "AuthenticateYN1", "1");
+                        $("#grid").jqGrid("setCell", rowid, "PartTimeJob2", "1");
+                        $("#grid").jqGrid("setCell", rowid, "DMSYN2", "1");
+                        $("#grid").jqGrid("setCell", rowid, "AuthenticateYN2", "1");
+                        $("#grid").jqGrid("setCell", rowid, "PartTimeJob3", "1");
+                        $("#grid").jqGrid("setCell", rowid, "DMSYN3", "1");
+                        $("#grid").jqGrid("setCell", rowid, "AuthenticateYN3", "1");
+                    }
+                    //if (rowdata.RowStatus == "" && _searchType) {
+                    //    $("#grid").setColProp('Name', { 'editable': false });
+                    //    $("#grid").setColProp('IDNo', { 'editable': false });
+                    //}
+
+                },
+                afterInsertRow: function (rowid, r) {
+                    $.each($("#grid").jqGrid("getGridParam", "colModel"), function (idx, ele) {
+                        $("#grid").setColProp(ele.name, { 'editable': _searchType });
+                    })
+                    var rowdata = $("#grid").jqGrid('getRowData', rowid);
+                    var $t = $(this);
+                    if (_searchType == false) {
+                        $.each($("#grid").jqGrid("getGridParam", "colModel"), function (idx, ele) {
+                            $t.find('#' + rowid).find("[aria-describedby='grid_" + ele.name + "']").addClass("readonlycell");
+                        })
+                    }else
+                        if (rowdata.RowStatus != "I") {
+                            $t.find('#' + rowid).find("[aria-describedby='grid_Name']").addClass("readonlycell");
+                           $t.find('#' + rowid).find("[aria-describedby='grid_IDNo']").addClass("readonlycell");
+                        }
+                },
+                //单元格进入编辑模式之前触发的事件
+                beforeEditCell: function (rowid, cellname, v, iRow, iCol) {
+                    var $t = $(this);
+                    switch (cellname) {
+                        case 'IDNo':
+                            var state = $t.getCell(rowid, 'RowStatus');
+                            if (state != 'I') {
+                                setTimeout(function () {
+                                    $t.restoreCell(rowid, 'IDNo');
+                                }, 0);
+                            }
+                            break;
+                        case 'Name':
+                            var state = $t.getCell(rowid, 'RowStatus');
+                            if (state != 'I') {
+                                setTimeout(function () {
+                                    $t.restoreCell(rowid, 'Name');
+                                }, 0);
+                            }
+                            break;
+                    }
+                }
+            });
+
+            $("#grid").closest(".ui-jqgrid-bdiv").css({ 'overflow-y': 'scroll' });
+        }
+        function fn_SetGrid(mydata) {
+            mydata = mydata || [];
+            _grid.clearGridData()
+            .setGridParam({
+                data: mydata
+            }).trigger('reloadGrid');
+        }
+        function fn_SaveCell() {
+            var $t = $(this);
+            var $ecs = $(".edit-cell", $t);
+            $ecs.each(function (idx, ec) {
+                var iRow = $(ec).parent().index();
+                var iCol = $(ec).index();
+                $t.saveCell(iRow, iCol);
+            });
+        }
+    </script>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=1.4"></script>
+    <script type="text/javascript" src="http://developer.baidu.com/map/jsdemo/demo/convertor.js"></script>
+    <script type="text/javascript">
+
+        var map;
+        var gpsPoint;
+        var baiduPoint;
+        var gpsAddress;
+        var baiduAddress;
+
+        function getLocation() {
+            //根据IP获取城市
+            var myCity = new BMap.LocalCity();
+            myCity.get(getCityByIP);
+
+            //获取GPS坐标
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showMap, handleError, { enableHighAccuracy: true, maximumAge: 1000 });
+            } else {
+                alert("您的浏览器不支持使用HTML 5来获取地理位置服务");
+            }
+        }
+
+        function showMap(value) {
+            var longitude = value.coords.longitude;
+            var latitude = value.coords.latitude;
+            map = new BMap.Map("map");
+            //alert("坐标经度为：" + latitude + "， 纬度为：" + longitude );
+            gpsPoint = new BMap.Point(longitude, latitude);    // 创建点坐标
+            map.centerAndZoom(gpsPoint, 15);
+
+            //根据坐标逆解析地址
+            var geoc = new BMap.Geocoder();
+            geoc.getLocation(gpsPoint, getCityByCoordinate);
+
+            BMap.Convertor.translate(gpsPoint, 0, translateCallback);
+        }
+
+        translateCallback = function (point) {
+            baiduPoint = point;
+            var geoc = new BMap.Geocoder();
+            geoc.getLocation(baiduPoint, getCityByBaiduCoordinate);
+        }
+
+        function getCityByCoordinate(rs) {
+            gpsAddress = rs.addressComponents;
+            var address = "GPS标注：" + gpsAddress.province + "," + gpsAddress.city + "," + gpsAddress.district + "," + gpsAddress.street + "," + gpsAddress.streetNumber;
+            var marker = new BMap.Marker(gpsPoint);  // 创建标注
+            map.addOverlay(marker);              // 将标注添加到地图中
+            var labelgps = new BMap.Label(address, { offset: new BMap.Size(20, -10) });
+            marker.setLabel(labelgps); //添加GPS标注
+        }
+
+        function getCityByBaiduCoordinate(rs) {
+            baiduAddress = rs.addressComponents;
+            var address = "百度标注：" + baiduAddress.province + "," + baiduAddress.city + "," + baiduAddress.district + "," + baiduAddress.street + "," + baiduAddress.streetNumber;
+            var marker = new BMap.Marker(baiduPoint);  // 创建标注
+            map.addOverlay(marker);              // 将标注添加到地图中
+            var labelbaidu = new BMap.Label(address, { offset: new BMap.Size(20, -10) });
+            marker.setLabel(labelbaidu); //添加百度标注
+        }
+
+        //根据IP获取城市
+        function getCityByIP(rs) {
+            var cityName = rs.name;
+            _position = cityName;
+            console.log("人员采集地点："+(_position==undefined||_position==null?"无":_position));
+        }
+
+        function handleError(value) {
+            switch (value.code) {
+                case 1:
+                    alert("位置服务被拒绝");
+                    break;
+                case 2:
+                    alert("暂时获取不到位置信息");
+                    break;
+                case 3:
+                    alert("获取信息超时");
+                    break;
+                case 4:
+                    alert("未知错误");
+                    break;
+            }
+        }
+
+        function init() {
+            getLocation();
+        }
+
+        //window.onload = init;
+
+      </script>
+}
+<div class="modal" style="display:none;" id="modal-container-loadbar">
+    <div id="loadBar">
+
+    </div>
+</div>
+<div class="row gap-top">
+    <div class="col-md-12">
+        <span class="fa fa-flag fa-lg gap-icon"></span><span class="page-mtitle"></span>人员检核<span>&nbsp;>&nbsp;</span>
+        <span class="page-title">人员登记</span>
+        <div class="pull-right">
+            <button id="btnStartCheck" class="btn btn-primary hidden">
+                <span class="fa fa-file-excel-o gap-icon"></span>开始检核
+            </button>
+            <button id="btnCommit" class="btn btn-primary hidden">
+                <span class="fa fa-file-excel-o gap-icon"></span>保存
+            </button>
+            <button id="btnTempDown" class="btn btn-primary hidden">
+                <span class="fa fa-file-excel-o gap-icon"></span>Excel模板下载
+            </button>
+            <a href="~/Template/人员登记模板.xlsx" class="aline" id="aTemp" style="display:none">Excel模板下载</a>
+            <button id="btnUpload" class="btn btn-primary hidden">
+                <span class="fa fa-file-excel-o gap-icon"></span>导入
+            </button>
+            <button id="btnExportZone" class="btn btn-primary hidden-xs">
+                <span class="fa fa-file-excel-o gap-icon"></span>小区报告
+            </button>
+            <button class="btn btn-primary" id="btnSearch">
+                <span class="fa fa-search gap-icon"></span>查询
+            </button>
+
+        </div>
+    </div>
+</div>
+
+<div class="row gap-top">
+    <div class="col-md-3 col-sm-4">
+        <div class="input-group">
+            <span class="input-group-addon title-sm required_style">业务类型</span>
+            <select class="form-control" id="selBusLst"></select><!--营销区，客户服务区-->
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-4">
+        <div class="input-group">
+            <span class="input-group-addon title-sm required_style">大区</span>
+            <select class="form-control orgWidth" id="selRepLst"></select><!--大区-->
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-4">
+        <div class="input-group">
+            <span class="input-group-addon title-sm required_style">区域</span>
+            <select class="form-control orgWidth" id="selZionLst"></select><!--区域-->
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-4">
+        <div class="input-group">
+            <span class="input-group-addon title-sm required_style">小区</span>
+            <select class="form-control orgWidth" id="selAreaLst"></select><!--小区-->
+        </div>
+    </div>
+</div>
+
+<div class="row gap-top">
+    <div class="col-md-3 col-sm-4">
+        <div class="input-group">
+            <span class="input-group-addon title-sm required_style">巡检月份</span>
+            <select class="form-control" id="selPlanLst"></select><!--巡检月份-->
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-4">
+        <div class="input-group">
+            <span class="input-group-addon title-sm required_style">经销商</span>
+            <select class="form-control orgWidth" id="selDisLst"></select><!--经销商-->
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-4">
+        <div class="input-group">
+            <span class="input-group-addon title-sm ">岗位</span>
+            <select class="form-control orgWidth" id="selPostLst"></select><!--岗位-->
+        </div>
+    </div>
+</div>
+<div class="row gap-top">
+    <div class="col-md-12">
+        <div class="pull-right">
+            <button class="btn btn-primary hidden" id="btnAdd">
+                <span class="fa fa-plus gap-icon"></span>添加行
+            </button>
+            <button class="btn btn-primary hidden" id="btnDelete">
+                <span class="fa fa-minus gap-icon"></span>删除行
+            </button>
+        </div>
+    </div>
+</div>
+<div class="row gap-top"><span class="required_style">注意:1.只能编辑和保存当前月的数据；2.人员离职，请在“状态”栏对应修改为“离职”，请勿删除；3.身份证号以“1000”开头的临时号码信息，需删除重新录入正确信息</span></div>
+<div class="row gap-top">
+    <div id="Grid" class="col-md-12">
+        <table id="grid" class="ui-jqgrid-htable"></table>
+        <div id="pager" class="page">
+        </div>
+    </div>
+</div>
+<div class="row gap-top hidden">
+    <form method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <div class="col-md-3">
+                <input id="files" name="files" type="file" style="display:none" />
+                <input id="fileText" type="text" class="form-control" disabled />
+            </div>
+            <div class="col-md-0">
+                <button type="button" class="btn btn-primary" onclick="$('#files').click()">浏览</button>
+                <input type="button" id="upload" class="btn btn-primary" value="Excel上传" />
+            </div>
+        </div>
+    </form>
+</div>
+<a href="" class="aline" id="ad" style="display:none">小区报告下载</a>
