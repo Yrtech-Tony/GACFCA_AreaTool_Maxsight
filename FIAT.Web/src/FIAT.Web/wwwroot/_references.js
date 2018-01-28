@@ -1,5 +1,4 @@
 ﻿/// <autosync enabled="true" />
-/// <reference path="js/Const_API.js" />
 /// <reference path="js/Const_API_PRD.js" />
 /// <reference path="js/Const_API_QA.js" />
 /// <reference path="js/design/jquery.mobile.custom.js" />
