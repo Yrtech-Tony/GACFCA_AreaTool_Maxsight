@@ -211,7 +211,7 @@
         }
 
         function fn_CheckStart(cellvalue, options, rowObject) {
-            return '<button type="button" class="btn btn-primary start"  onclick="fn_Start(' + options.rowId + ',\'S\',this)">开始</button>';
+            return '<button type="button" class="btn btn-primary start"  onclick="fn_Start_Proxy(' + options.rowId + ',\'S\',this)">开始</button>';
         }
         function fn_UnCheckStart() {
 
@@ -238,15 +238,32 @@
             return "";
         }
 
+        function fn_Start_Proxy(rowId, operation, obj){
+            var selType =$("#selVisitType").val();
+            if(selType == "A"){
+                var popHeight = 250;
+                var popWidth = 500;
+                $.sa.pop('/Tour/SetSales', {
+                    height: popHeight, width: popWidth, title: '<span class="fa fa-hand-o-right gap-icon-right"></span><span>销售人员设置</span>',
+                    params: {
+                    }
+                  , popcallback: function (msg) {
+                      if (msg != null && msg.length > 0) {
+                          fn_Start(rowId,operation,obj);
+                      }
+                  }
+                });            
+            }        
+        }
+
         var _currentObjMST;
         function fn_Start(rowId, operation, obj) {
-
             var rowObject = $("#gridTask").jqGrid('getRowData', rowId);
             _tpStatus = rowObject.TPStatus;
             if (_tpStatus == "检查完成") {
                 operation = "";
             }
-            _rowNo = rowId
+            _rowNo = rowId;
             var tpType = rowObject.TPType;
 
             if (tpType=="C") {

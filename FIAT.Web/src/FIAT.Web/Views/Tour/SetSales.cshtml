@@ -1,0 +1,49 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    Layout = "_LayoutOfPop";
+    ViewData["Title"] = "销售人员设置";
+}
+@section Scripts{
+<script>
+    $(function () {
+        $("#btnSave").click(function () {
+            var disList = [];
+            disList.push({
+                SalesManager: $("#SalesManager").val(),
+                SalesConsultant: $("#SalesConsultant").val(),
+                Sales: $("#Sales").val()
+            });
+            window.parent.popcallback(disList);
+        })
+
+    })
+</script>
+    }
+
+<div class="row gap-top" style="line-height:30px">
+    <div class="col-md-12">
+        <div class="input-group">
+            <span class="input-group-addon title-sm "><font color="red">* </font>销售经理</span>
+            <input type="text" class="form-control inputMaxWidth" id="SalesManager">
+        </div>
+    </div>
+    <div class="col-md-12" style="text-align: right;padding-top:  5px;">
+        <div class="input-group">
+            <span class="input-group-addon title-sm "><font color="red">* </font>销售顾问</span>
+            <input type="text" class="form-control inputMaxWidth" id="SalesConsultant">
+        </div>
+    </div>
+    <div class="col-md-12" style="text-align: right;padding-top:  5px;">
+        <div class="input-group">
+            <span class="input-group-addon title-sm "><font color="red">* </font>销售内勤</span>
+            <input type="text" class="form-control inputMaxWidth" id="Sales">
+        </div>
+    </div>
+    <div class="col-md-12" style="text-align: right;padding-top:  5px;">
+        <button type="button" class="btn btn-primary" id="btnSave">
+            <span class="fa fa-save gap-icon"></span>保存
+        </button>
+    </div>
+</div>

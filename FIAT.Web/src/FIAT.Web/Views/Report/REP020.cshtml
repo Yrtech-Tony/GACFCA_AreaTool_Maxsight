@@ -1000,7 +1000,13 @@
                      , '大区', $("#selReport>option:selected").text()
                      , '区域', $("#selRegion>option:selected").text()
                      , '小区', $("#selArea>option:selected").text()
-                     , '巡检月份', $("#selPlanTask>option:selected").text()];
+                     , '巡检月份', $("#selPlanTask>option:selected").text()]
+            //, '销售经理', 'zuzheng'
+            //, '销售顾问', 'moujunsheng'];
+            if ($("#selVType").val() == "D") {
+                hd.push('销售内勤');
+                hd.push('moujunsheng');
+            }
             for (var i = 0; i < hd.length; i++) {
                 var hc = h.addCell();
                 hc.value = hd[i];

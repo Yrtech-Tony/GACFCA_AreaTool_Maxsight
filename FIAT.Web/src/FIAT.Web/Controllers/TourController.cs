@@ -71,6 +71,11 @@ namespace FIAT.Web.Controllers
         {
             return View();
         }
+        public IActionResult SetSales()
+        {
+            return View();
+        }
+
         public string Upload()
         {
             try

@@ -269,6 +269,27 @@ namespace FIAT.Web.Controllers
                         CellRangeAddress region3_2 = new CellRangeAddress(3, 3, 5, 6);
                         sheet1.AddMergedRegion(region3_2);
 
+                        IRow row4 = sheet1.CreateRow(4);
+                        ICell cel4_0 = row4.CreateCell(0);
+                        row4.CreateCell(1).CellStyle = style2;
+                        cel4_0.SetCellValue("销售经理：" + "zuzheng");
+                        cel4_0.CellStyle = style2;
+                        CellRangeAddress region4_0 = new CellRangeAddress(4, 4, 0, 1);
+                        sheet1.AddMergedRegion(region4_0);
+                        ICell cel4_1 = row4.CreateCell(2);
+                        row4.CreateCell(3).CellStyle = style2;
+                        row4.CreateCell(4).CellStyle = style2;
+                        cel4_1.SetCellValue("销售顾问：" + "moujunsheng");
+                        cel4_1.CellStyle = style2;
+                        CellRangeAddress region4_1 = new CellRangeAddress(4, 4, 2, 4);
+                        sheet1.AddMergedRegion(region4_1);
+                        ICell cel4_2 = row4.CreateCell(5);
+                        row4.CreateCell(6).CellStyle = style2;
+                        cel4_2.SetCellValue("销售内勤：" + "huohaitao");
+                        cel4_2.CellStyle = style2;
+                        CellRangeAddress region4_2 = new CellRangeAddress(4, 4, 5, 6);
+                        sheet1.AddMergedRegion(region4_2);
+
                         var style_sub = (XSSFCellStyle)workbook.CreateCellStyle();
                         style_sub.Alignment = HorizontalAlignment.Center;
                         style_sub.SetFillForegroundColor(new XSSFColor(rgb));
@@ -302,15 +323,15 @@ namespace FIAT.Web.Controllers
                         style_7.BorderRight = BorderStyle.Thin;
                         style_7.BorderTop = BorderStyle.Thin;
                         style_7.SetFont(font_c);
-                        sheet1.CreateRow(4);
-                        IRow row_score = sheet1.CreateRow(5);
+                        sheet1.CreateRow(5);
+                        IRow row_score = sheet1.CreateRow(6);
                         ICell cell_score = row_score.CreateCell(0);
                         cell_score.SetCellValue("检核结果汇总");
-                        CellRangeAddress region_score = new CellRangeAddress(5, 5, 0, 4);
+                        CellRangeAddress region_score = new CellRangeAddress(6, 6, 0, 4);
                         cell_score.CellStyle = style_sub;
                         sheet1.AddMergedRegion(region_score);
 
-                        int tCount = 6;
+                        int tCount = 7;
                         int sCount = tCount;
 
                         IRow rows = sheet1.CreateRow(sCount);
