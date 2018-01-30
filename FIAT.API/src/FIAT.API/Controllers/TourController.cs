@@ -131,5 +131,32 @@ namespace FIAT.API.Controllers
         {
             return _tourService.SearchAllPlansByDisId(inUserId, userType, disId);
         }
+        #region Tony 
+        /// <summary>
+        /// 检核时如果是卖车包或者DMS的时候输入销售顾问的信息进行保存
+        /// </summary>
+        /// <param name="param"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [ActionName("SavePlansPosition")]
+        public Task<APIResult> SavePlansPosition([FromBody]PlansPositionDto param)
+        {
+            return _tourService.SavePlansPosition(param);
+        }
+        /// <summary>
+        /// 检核时如果是卖车包或者DMS的时候输入销售顾问的信息进行查询
+        /// </summary>
+        /// <param name="inUserId"></param>
+        /// <param name="userType"></param>
+        /// <param name="disId"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [ActionName("GetPlansPosition")]
+        public Task<APIResult> GetPlansPosition(string batch, string disId)
+        {
+            return _tourService.GetPlansPosition(batch, disId);
+        }
+        #endregion
+
     }
 }

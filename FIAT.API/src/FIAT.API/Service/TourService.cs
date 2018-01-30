@@ -29,6 +29,11 @@ namespace FIAT.API.Service
         Task<APIResult> GetTaskListByDisIdForExcel(string disCode, string startTime, string endTime, string status, string Pid);
         Task<APIResult> InsertCustomizedImpItem(CustomizedImpItemDto param);
         Task<APIResult> SearchAllPlansByDisId(string inUserId, string userType, string disId);
+        #region MyRegion
+        Task<APIResult> SavePlansPosition(PlansPositionDto param);
+        Task<APIResult> GetPlansPosition(string batch, string disId);
+        #endregion
+
     }
     public class TourService : ITourService
     {
@@ -569,6 +574,68 @@ namespace FIAT.API.Service
                 return new APIResult { Body = "", ResultCode = ResultType.Failure, Msg = ex.Message };
             }
         }
+        #region Tony
+        public async Task<APIResult> SavePlansPosition(PlansPositionDto param)
+        {
+            try
+            {
+                string spName = @"up_RMMT_TOU_PlansPosition_S";
 
+                DynamicParameters dp = new DynamicParameters();
+                dp.Add("@Batch", param.Batch, DbType.Int64);
+                dp.Add("@DisId", param.DisId, DbType.Int64);
+                dp.Add("@SalesConsultant", param.SalesConsultant, DbType.String);
+                dp.Add("@SalesManager", param.SalesManager, DbType.String);
+                dp.Add("@SalesInside", param.SalesInside, DbType.String);
+                dp.Add("@UserId", param.InUserid, DbType.String);
+
+
+                using (var conn = new SqlConnection(DapperContext.Current.SqlConnection))
+                {
+                    conn.Open();
+                    using (var tran = conn.BeginTransaction(System.Data.IsolationLevel.ReadCommitted))
+                    {
+                        await conn.ExecuteAsync(spName, dp, tran, null, CommandType.StoredProcedure);
+                        tran.Commit();
+                    }
+                }
+                return new APIResult { Body = "", ResultCode = ResultType.Success, Msg = "" };
+            }
+            catch (Exception ex)
+            {
+                return new APIResult { Body = "", ResultCode = ResultType.Failure, Msg = ex.Message };
+            }
+        }
+
+        public async Task<APIResult> GetPlansPosition(string batch, string disId)
+        {
+            try
+            {
+                string spName = @"up_RMMT_TOU_PlansPosition_R";
+
+                DynamicParameters dp = new DynamicParameters();
+                dp.Add("@Batch", batch, DbType.Int64);
+                dp.Add("@DisId", disId, DbType.Int64);
+
+                using (var conn = new SqlConnection(DapperContext.Current.SqlConnection))
+                {
+                    conn.Open();
+
+                    IEnumerable<PlansPositionDto> list = await conn.QueryAsync<PlansPositionDto>(spName, dp, null, null, CommandType.StoredProcedure);
+                    string message = "";
+                    if (list.Count() == 0)
+                    {
+                        message = "没有数据";
+                    }
+                    APIResult result = new APIResult { Body = CommonHelper.EncodeDto<PlansPositionDto>(list), ResultCode = ResultType.Success, Msg = message };
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                return new APIResult { Body = "", ResultCode = ResultType.Failure, Msg = ex.Message };
+            }
+        }
+        #endregion
     }
 }
