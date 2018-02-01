@@ -1,5 +1,5 @@
 ﻿var FRUIT_URL = "http://epayqaapi.elandcloud.com/api/v1/epay/SearchPayResultSumByStoreDate";
-var BASE_URL = "http://103.13.245.59:6502/fiat/api/v1/";
+var BASE_URL = "http://101.201.221.141:8005/fiat/api/v1/";
 var LOGIN_URL = BASE_URL + "Users";
 
 //COMMON start
