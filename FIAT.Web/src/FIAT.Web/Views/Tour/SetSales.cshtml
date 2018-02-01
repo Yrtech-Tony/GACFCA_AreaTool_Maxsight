@@ -8,18 +8,40 @@
 @section Scripts{
     <script>
         $(function () {
+
             if (Request["selType"] == "E") {
                 $("#SalsInsideDiv").hide();
             }
-            
+            var item = {
+                DisId: Request["disId"],
+                Batch: Request["batch"]
+            }
+            $.sa.get(GetPlansPosition,
+                   item,
+                   {
+                       "success": function (data) {
+                           $("#btnSave").prop("disabled", false);
+                           var jData = JSON.parse(data.body);
+                           if (jData.length > 0) {
+                               item.Id = jData[0].Id;
+                               $("#SalesManager").val(jData[0].SalesManager);
+                               $("#SalesConsultant").val(jData[0].SalesConsultant);
+                               $("#SalesInside").val(jData[0].SalesInside);
+                           }
+                       },
+                       "failure": function (data) {
+                           $("#btnSave").prop("disabled", true);
+                           $.sa.alert("查询PlansPosition失败");
+                       }
+                   }, $("body"));
             $("#btnSave").click(function () {
-                var item = {
-                    DisId: Request["disId"],
-                    Batch: Request["batch"],
+                item = $.extend( item, {
+                    Id: "0",
+                    userid: '@Context.Request.Cookies[SessionKeys.SESSION_USERID]',
                     SalesManager: $("#SalesManager").val(),
                     SalesConsultant: $("#SalesConsultant").val(),
-                    SalsInside: $("#SalsInside").val()
-                };
+                    SalesInside: $("#SalesInside").val()
+                });
                 console.log(item)
                 console.log(SavePlansPosition)
                 $.sa.post(SavePlansPosition,
@@ -58,7 +80,7 @@
     <div class="col-md-12" style="text-align: right;padding-top:  5px;" id="SalsInsideDiv">
         <div class="input-group">
             <span class="input-group-addon title-sm "><font color="red">* </font>销售内勤</span>
-            <input type="text" class="form-control inputMaxWidth" id="SalsInside">
+            <input type="text" class="form-control inputMaxWidth" id="SalesInside">
         </div>
     </div>
     <div class="col-md-12" style="text-align: right;padding-top:  5px;">
