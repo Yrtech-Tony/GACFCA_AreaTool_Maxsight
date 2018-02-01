@@ -8,16 +8,20 @@
 @section Scripts{
     <script>
         $(function () {
-            console.log([Request["Type"], Request["Batch"]]);
+            if (Request["selType"] == "E") {
+                $("#SalsInsideDiv").hide();
+            }
+            
             $("#btnSave").click(function () {
                 var item = {
-                    disId: Request["disId"],
-                    batch: Request["batch"],
+                    DisId: Request["disId"],
+                    Batch: Request["batch"],
                     SalesManager: $("#SalesManager").val(),
                     SalesConsultant: $("#SalesConsultant").val(),
                     SalsInside: $("#SalsInside").val()
                 };
-                console.log(item);
+                console.log(item)
+                console.log(SavePlansPosition)
                 $.sa.post(SavePlansPosition,
                     JSON.stringify(item),
                     {
@@ -51,10 +55,10 @@
             <input type="text" class="form-control inputMaxWidth" id="SalesConsultant">
         </div>
     </div>
-    <div class="col-md-12" style="text-align: right;padding-top:  5px;">
+    <div class="col-md-12" style="text-align: right;padding-top:  5px;" id="SalsInsideDiv">
         <div class="input-group">
             <span class="input-group-addon title-sm "><font color="red">* </font>销售内勤</span>
-            <input type="text" class="form-control inputMaxWidth" id="Sales">
+            <input type="text" class="form-control inputMaxWidth" id="SalsInside">
         </div>
     </div>
     <div class="col-md-12" style="text-align: right;padding-top:  5px;">
