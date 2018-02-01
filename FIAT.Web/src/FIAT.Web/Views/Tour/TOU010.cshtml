@@ -247,7 +247,8 @@
                     height: popHeight, width: popWidth, title: '<span class="fa fa-hand-o-right gap-icon-right"></span><span>销售人员设置</span>',
                     params: {
                         batch:$("#selPlanLst").val(),
-                        disId:_disId
+                        disId:_disId,
+                        selType:selType
                     }
                   , popcallback: function (msg) {
                       if (msg != null && msg.length > 0) {
