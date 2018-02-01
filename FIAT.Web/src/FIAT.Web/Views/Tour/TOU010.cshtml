@@ -240,7 +240,7 @@
 
         function fn_Start_Proxy(rowId, operation, obj){
             var selType =$("#selVisitType").val();
-            if(selType == "D" || selType == "F"){
+            if(selType == "D" || selType == "E"){
                 var popHeight = 250;
                 var popWidth = 500;
                 $.sa.pop('/Tour/SetSales', {
@@ -418,7 +418,8 @@
                               {
                                   "success": function (data) {
                                       $.sa.alert("保存成功");
-                                      $("#gridTask").find("tr[id='" + _rowNo + "']").find(".start").click();
+                                      //$("#gridTask").find("tr[id='" + _rowNo + "']").find(".start").click();
+                                      fn_Start(_rowNo,"S",$("#gridTask").find("tr[id='" + _rowNo + "']").find(".start"));
                                   },
                                   "failure": function (data) {
                                       $.sa.alert("保存失败");
@@ -472,7 +473,8 @@
                     }
               , popcallback: function (msg) {
                   if (msg != null && msg.length > 0) {
-                      $("#gridTask").find("tr[id='" + _rowNo + "']").find(".start").click();
+                      //$("#gridTask").find("tr[id='" + _rowNo + "']").find(".start").click();
+                      fn_Start(_rowNo,"S",$("#gridTask").find("tr[id='" + _rowNo + "']").find(".start"));
                   }
               }
                 });
@@ -486,7 +488,9 @@
                     }
                   , popcallback: function (msg) {
                       if (msg != null && msg.length > 0) {
-                          $("#gridTask").find("tr[id='" + _rowNo + "']").find(".start").click();
+                          $("#gridTask").data()
+                          //$("#gridTask").find("tr[id='" + _rowNo + "']").find(".start").click();
+                          fn_Start(_rowNo,"S",$("#gridTask").find("tr[id='" + _rowNo + "']").find(".start"));
                       }
                   }
                 });

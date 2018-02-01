@@ -48,7 +48,8 @@ namespace FIAT.Web.Controllers
             return this.File(bytes, contentType, fileName);
         }
         [HttpPost]
-        public async Task<ActionResult> UploadScoreAjaxDown(string disCode, string startTime, string endTime, string status, string Pid, string disname, string name, string visitTypeName, string visitDateTime)
+        public async Task<ActionResult> UploadScoreAjaxDown(string disCode, string startTime, string endTime, string status, string Pid, string disname,
+            string name, string visitTypeName, string visitDateTime,string visitType, string batch)
         {
             try
             {
@@ -267,38 +268,47 @@ namespace FIAT.Web.Controllers
                         cel0_2.CellStyle = style2;
                         CellRangeAddress region3_2 = new CellRangeAddress(3, 3, 5, 6);
                         sheet1.AddMergedRegion(region3_2);
-
-                        if (visitTypeName == "D" || visitTypeName == "E")
+                        
+                        if (visitType == "D" || visitType == "E")
                         {
                             //DMS 和 卖车宝
-                            string plansPosition = await CommonHelper.GetHttpClient().GetStringAsync(CommonHelper.Current.GetAPIBaseUrl + "Tour/GetPlansPosition/" + disCode + "/" + Pid);
+                            string plansPosition = await CommonHelper.GetHttpClient().GetStringAsync(string.Format("{0}/Tour/GetPlansPosition?batch={1}&disId={2}", CommonHelper.Current.GetAPIBaseUrl, batch, disCode));
                             APIResult planAPIResult = CommonHelper.DecodeString<APIResult>(plansPosition);
-                            Dictionary<string, object> dic = CommonHelper.DecodeString<Dictionary<string,object>>(planAPIResult.Body); 
-                            IRow row4 = sheet1.CreateRow(4);
-                            ICell cel4_0 = row4.CreateCell(0);
-                            row4.CreateCell(1).CellStyle = style2;
-                            cel4_0.SetCellValue("销售经理：" + dic["SalesManager"]);
-                            cel4_0.CellStyle = style2;
-                            CellRangeAddress region4_0 = new CellRangeAddress(4, 4, 0, 1);
-                            sheet1.AddMergedRegion(region4_0);
-
-                            ICell cel4_1 = row4.CreateCell(2);
-                            row4.CreateCell(3).CellStyle = style2;
-                            row4.CreateCell(4).CellStyle = style2;
-                            cel4_1.SetCellValue("销售顾问：" + dic["SalesConsultant"]);
-                            cel4_1.CellStyle = style2;
-                            CellRangeAddress region4_1 = new CellRangeAddress(4, 4, 2, 4);
-                            sheet1.AddMergedRegion(region4_1);
-                            
-                            if(visitTypeName == "D")
+                            List<Dictionary<string, object>> dicList = CommonHelper.DecodeString<List<Dictionary<string, object>>>(planAPIResult.Body);
+                            if(dicList != null && dicList.Count > 0)
                             {
-                                ICell cel4_2 = row4.CreateCell(5);
-                                row4.CreateCell(6).CellStyle = style2;
-                                cel4_2.SetCellValue("销售内勤：" + dic["SalsInside"]);
-                                cel4_2.CellStyle = style2;
-                                CellRangeAddress region4_2 = new CellRangeAddress(4, 4, 5, 6);
-                                sheet1.AddMergedRegion(region4_2);
-                            }                            
+                                Dictionary<string, object> dic = dicList[0];
+                                IRow row4 = sheet1.CreateRow(4);
+                                ICell[] cells = new ICell[7];
+                                for (int i = 0; i < 7; i++)
+                                {
+                                    cells[i] = row4.CreateCell(i);
+                                    cells[i].CellStyle = style2;
+                                }
+                                string txtManager = "销售经理：" + dic["SalesManager"];
+                                string txtConsultant = "销售顾问：" + dic["SalesConsultant"];
+                                string txtInside = "销售内勤：" + dic["SalesInside"];
+                                if (visitType == "D")
+                                {
+                                    cells[0].SetCellValue(txtManager);                                    
+                                    cells[2].SetCellValue(txtConsultant);
+                                    cells[5].SetCellValue(txtInside);
+                                    
+                                    //合并单元格
+                                    sheet1.AddMergedRegion(new CellRangeAddress(4, 4, 0, 1));
+                                    sheet1.AddMergedRegion(new CellRangeAddress(4, 4, 2, 4));
+                                    sheet1.AddMergedRegion(new CellRangeAddress(4, 4, 5, 6));
+                                }
+                                else
+                                {
+                                    cells[0].SetCellValue(txtManager);
+                                    cells[3].SetCellValue(txtConsultant);
+
+                                    //合并单元格
+                                    sheet1.AddMergedRegion(new CellRangeAddress(4, 4, 0, 2));
+                                    sheet1.AddMergedRegion(new CellRangeAddress(4, 4, 3, 6));
+                                }                               
+                            }                                                      
                         }                        
 
                         var style_sub = (XSSFCellStyle)workbook.CreateCellStyle();

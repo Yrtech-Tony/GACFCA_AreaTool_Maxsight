@@ -492,7 +492,7 @@
                 type: "POST",
                 url: "/Report/UploadScoreAjaxDown?disCode=" + disid + "&startTime=" + $("#txtSDate").val() + "&endTime=" + $("#txtEDate").val()
                         + "&status=F&Pid=" + pid + "&disName=" + disname + "&name=" + name
-                        + "&visitTypeName=" + visitTypeName + "&visitDateTime=" + visitDateTime,
+                        + "&visitTypeName=" + visitTypeName + "&visitDateTime=" + visitDateTime + "&visitType=" + $("#selVisitType").val() + "&batch=" + $("#selPlanLst").val(),
                 contentType: false,
                 processData: false,
                 //data: data,
