@@ -582,6 +582,7 @@ namespace FIAT.API.Service
                 string spName = @"up_RMMT_TOU_PlansPosition_S";
 
                 DynamicParameters dp = new DynamicParameters();
+                dp.Add("@Id", param.Id, DbType.Int64);
                 dp.Add("@Batch", param.Batch, DbType.Int64);
                 dp.Add("@DisId", param.DisId, DbType.Int64);
                 dp.Add("@SalesConsultant", param.SalesConsultant, DbType.String);
