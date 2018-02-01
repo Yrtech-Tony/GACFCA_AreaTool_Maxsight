@@ -54,6 +54,7 @@ namespace FIAT.Web.Controllers
             {
                 string result = await CommonHelper.GetHttpClient().GetStringAsync(CommonHelper.Current.GetAPIBaseUrl + "Tour/GetTaskListByDisIdForExcel/" + disCode + "/" + startTime + "/" + endTime + "/" + status + "/" + Pid);
                 var apiResult = CommonHelper.DecodeString<APIResult>(result);
+                
                 if (apiResult.ResultCode == ResultType.Success)
                 {
                     ExcelResult er = CommonHelper.DecodeString<ExcelResult>(apiResult.Body);
@@ -106,9 +107,7 @@ namespace FIAT.Web.Controllers
                         sheet1.PrintSetup.PaperSize = 9;
                         sheet1.SetMargin(MarginType.RightMargin, 0);
                         //sheet1.PrintSetup.NoOrientation = true;
-
-
-
+                        
                         IFont font_b = workbook.CreateFont();
                         font_b.FontName = "微软雅黑";
                         font_b.FontHeightInPoints = 10;
@@ -269,26 +268,38 @@ namespace FIAT.Web.Controllers
                         CellRangeAddress region3_2 = new CellRangeAddress(3, 3, 5, 6);
                         sheet1.AddMergedRegion(region3_2);
 
-                        IRow row4 = sheet1.CreateRow(4);
-                        ICell cel4_0 = row4.CreateCell(0);
-                        row4.CreateCell(1).CellStyle = style2;
-                        cel4_0.SetCellValue("销售经理：" + "zuzheng");
-                        cel4_0.CellStyle = style2;
-                        CellRangeAddress region4_0 = new CellRangeAddress(4, 4, 0, 1);
-                        sheet1.AddMergedRegion(region4_0);
-                        ICell cel4_1 = row4.CreateCell(2);
-                        row4.CreateCell(3).CellStyle = style2;
-                        row4.CreateCell(4).CellStyle = style2;
-                        cel4_1.SetCellValue("销售顾问：" + "moujunsheng");
-                        cel4_1.CellStyle = style2;
-                        CellRangeAddress region4_1 = new CellRangeAddress(4, 4, 2, 4);
-                        sheet1.AddMergedRegion(region4_1);
-                        ICell cel4_2 = row4.CreateCell(5);
-                        row4.CreateCell(6).CellStyle = style2;
-                        cel4_2.SetCellValue("销售内勤：" + "huohaitao");
-                        cel4_2.CellStyle = style2;
-                        CellRangeAddress region4_2 = new CellRangeAddress(4, 4, 5, 6);
-                        sheet1.AddMergedRegion(region4_2);
+                        if (visitTypeName == "D" || visitTypeName == "E")
+                        {
+                            //DMS 和 卖车宝
+                            string plansPosition = await CommonHelper.GetHttpClient().GetStringAsync(CommonHelper.Current.GetAPIBaseUrl + "Tour/GetPlansPosition/" + disCode + "/" + Pid);
+                            APIResult planAPIResult = CommonHelper.DecodeString<APIResult>(plansPosition);
+                            Dictionary<string, object> dic = CommonHelper.DecodeString<Dictionary<string,object>>(planAPIResult.Body); 
+                            IRow row4 = sheet1.CreateRow(4);
+                            ICell cel4_0 = row4.CreateCell(0);
+                            row4.CreateCell(1).CellStyle = style2;
+                            cel4_0.SetCellValue("销售经理：" + dic["SalesManager"]);
+                            cel4_0.CellStyle = style2;
+                            CellRangeAddress region4_0 = new CellRangeAddress(4, 4, 0, 1);
+                            sheet1.AddMergedRegion(region4_0);
+
+                            ICell cel4_1 = row4.CreateCell(2);
+                            row4.CreateCell(3).CellStyle = style2;
+                            row4.CreateCell(4).CellStyle = style2;
+                            cel4_1.SetCellValue("销售顾问：" + dic["SalesConsultant"]);
+                            cel4_1.CellStyle = style2;
+                            CellRangeAddress region4_1 = new CellRangeAddress(4, 4, 2, 4);
+                            sheet1.AddMergedRegion(region4_1);
+                            
+                            if(visitTypeName == "D")
+                            {
+                                ICell cel4_2 = row4.CreateCell(5);
+                                row4.CreateCell(6).CellStyle = style2;
+                                cel4_2.SetCellValue("销售内勤：" + dic["SalsInside"]);
+                                cel4_2.CellStyle = style2;
+                                CellRangeAddress region4_2 = new CellRangeAddress(4, 4, 5, 6);
+                                sheet1.AddMergedRegion(region4_2);
+                            }                            
+                        }                        
 
                         var style_sub = (XSSFCellStyle)workbook.CreateCellStyle();
                         style_sub.Alignment = HorizontalAlignment.Center;

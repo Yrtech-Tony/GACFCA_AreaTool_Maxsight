@@ -246,6 +246,8 @@
                 $.sa.pop('/Tour/SetSales', {
                     height: popHeight, width: popWidth, title: '<span class="fa fa-hand-o-right gap-icon-right"></span><span>销售人员设置</span>',
                     params: {
+                        batch:$("#selPlanLst").val(),
+                        disId:$("#selServerLst").val()
                     }
                   , popcallback: function (msg) {
                       if (msg != null && msg.length > 0) {

@@ -28,6 +28,9 @@ var CUSTOMIZEDTASKCHECK = BASE_URL + "Tour/CustomizedTaskCheck";
 var GETCUSTOMIZEDTASKBYTASKID = BASE_URL + "Tour/GetCustomizedTaskByTaskId";
 var REGCUSTOMIZEDIMPITEM = BASE_URL + "Tour/RegCustomizedImpItem";
 var GETALLPLANSBYDISID = BASE_URL + "Tour/GetAllPlansByDisId";
+
+var SavePlansPosition = BASE_URL + "Tour/SavePlansPosition";
+var GetPlansPosition = BASE_URL + "Tour/GetPlansPosition";
 //Tou end
 
 

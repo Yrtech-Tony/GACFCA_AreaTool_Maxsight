@@ -6,21 +6,37 @@
     ViewData["Title"] = "销售人员设置";
 }
 @section Scripts{
-<script>
-    $(function () {
-        $("#btnSave").click(function () {
-            var disList = [];
-            disList.push({
-                SalesManager: $("#SalesManager").val(),
-                SalesConsultant: $("#SalesConsultant").val(),
-                Sales: $("#Sales").val()
-            });
-            window.parent.popcallback(disList);
-        })
+    <script>
+        $(function () {
+            console.log([Request["Type"], Request["Batch"]]);
+            $("#btnSave").click(function () {
+                var item = {
+                    disId: Request["disId"],
+                    batch: Request["batch"],
+                    SalesManager: $("#SalesManager").val(),
+                    SalesConsultant: $("#SalesConsultant").val(),
+                    SalsInside: $("#SalsInside").val()
+                };
+                console.log(item);
+                $.sa.post(SavePlansPosition,
+                    JSON.stringify(item),
+                    {
+                        "success": function (data) {
+                            $.sa.alert("保存成功");
+                            var disList = [];
+                            disList.push(item);
+                            window.parent.popcallback(disList);
+                        },
+                        "failure": function (data) {
+                            $.sa.alert("保存失败");
+                        }
+                    }, $("body"));
 
-    })
-</script>
-    }
+            })
+
+        })
+    </script>
+}
 
 <div class="row gap-top" style="line-height:30px">
     <div class="col-md-12">
