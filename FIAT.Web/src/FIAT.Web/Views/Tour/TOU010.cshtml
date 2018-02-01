@@ -240,14 +240,14 @@
 
         function fn_Start_Proxy(rowId, operation, obj){
             var selType =$("#selVisitType").val();
-            if(selType == "A"){
+            if(selType == "D" || selType == "F"){
                 var popHeight = 250;
                 var popWidth = 500;
                 $.sa.pop('/Tour/SetSales', {
                     height: popHeight, width: popWidth, title: '<span class="fa fa-hand-o-right gap-icon-right"></span><span>销售人员设置</span>',
                     params: {
                         batch:$("#selPlanLst").val(),
-                        disId:$("#selServerLst").val()
+                        disId:_disId
                     }
                   , popcallback: function (msg) {
                       if (msg != null && msg.length > 0) {
@@ -255,7 +255,9 @@
                       }
                   }
                 });            
-            }        
+            } else{
+                fn_Start(rowId,operation,obj);            
+            }       
         }
 
         var _currentObjMST;
