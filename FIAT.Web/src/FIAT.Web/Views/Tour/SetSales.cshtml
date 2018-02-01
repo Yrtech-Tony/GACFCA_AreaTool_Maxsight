@@ -35,15 +35,15 @@
                        }
                    }, $("body"));
             $("#btnSave").click(function () {
-                item = $.extend( item, {
-                    Id: "0",
-                    userid: '@Context.Request.Cookies[SessionKeys.SESSION_USERID]',
+                item = $.extend(item, {
+                    InUserid: '@Context.Request.Cookies[SessionKeys.SESSION_USERID]',
                     SalesManager: $("#SalesManager").val(),
                     SalesConsultant: $("#SalesConsultant").val(),
                     SalesInside: $("#SalesInside").val()
                 });
-                console.log(item)
-                console.log(SavePlansPosition)
+                if (!item.Id) {
+                    item.Id = "0";
+                }
                 $.sa.post(SavePlansPosition,
                     JSON.stringify(item),
                     {
