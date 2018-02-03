@@ -26,7 +26,7 @@ namespace FIAT.API.Service
         Task<APIResult> CustomizedTaskCheck(CustomizedTaskDto param);
         Task<APIResult> UpLoadAllScoreInfo(AllTaskInfoRegLstDto param);
         Task<APIResult> UploadLocalDB(LocalDBUploadParams param);
-        Task<APIResult> GetTaskListByDisIdForExcel(string disCode, string startTime, string endTime, string status, string Pid);
+        Task<APIResult> GetTaskListByDisIdForExcel(string disCode, string startTime, string endTime, string status, string pid);
         Task<APIResult> InsertCustomizedImpItem(CustomizedImpItemDto param);
         Task<APIResult> SearchAllPlansByDisId(string inUserId, string userType, string disId);
         #region MyRegion
@@ -447,7 +447,7 @@ namespace FIAT.API.Service
             }
         }
 
-        public async Task<APIResult> GetTaskListByDisIdForExcel(string disCode, string startTime, string endTime, string status, string Pid)
+        public async Task<APIResult> GetTaskListByDisIdForExcel(string disCode, string startTime, string endTime, string status, string pid)
         {
             try
             {
@@ -470,7 +470,7 @@ namespace FIAT.API.Service
                 dp.Add("@StartTime", startTime, DbType.String);
                 dp.Add("@EndTime", endTime, DbType.String);
                 dp.Add("@Status", status, DbType.String);
-                dp.Add("@Pid", Pid, DbType.Int64);
+                dp.Add("@Pid", pid, DbType.Int64);
 
                 using (var conn = new SqlConnection(DapperContext.Current.SqlConnection))
                 {

@@ -48,12 +48,12 @@ namespace FIAT.Web.Controllers
             return this.File(bytes, contentType, fileName);
         }
         [HttpPost]
-        public async Task<ActionResult> UploadScoreAjaxDown(string disCode, string startTime, string endTime, string status, string Pid, string disname,
+        public async Task<ActionResult> UploadScoreAjaxDown(string disCode, string startTime, string endTime, string status, string pid, string disname,
             string name, string visitTypeName, string visitDateTime,string visitType, string batch)
         {
             try
             {
-                string result = await CommonHelper.GetHttpClient().GetStringAsync(CommonHelper.Current.GetAPIBaseUrl + "Tour/GetTaskListByDisIdForExcel/" + disCode + "/" + startTime + "/" + endTime + "/" + status + "/" + Pid);
+                string result = await CommonHelper.GetHttpClient().GetStringAsync(CommonHelper.Current.GetAPIBaseUrl + "Tour/GetTaskListByDisIdForExcel/" + disCode + "/" + startTime + "/" + endTime + "/" + status + "/" + pid);
                 var apiResult = CommonHelper.DecodeString<APIResult>(result);
                 
                 if (apiResult.ResultCode == ResultType.Success)

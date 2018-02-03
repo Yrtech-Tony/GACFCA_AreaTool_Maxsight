@@ -265,7 +265,7 @@ namespace FIAT.API.Service
                 {
                     conn.Open();
 
-                    var sManys = await conn.QueryMultipleAsync(spName, param: dp, commandTimeout:180,commandType: System.Data.CommandType.StoredProcedure);
+                    var sManys = await conn.QueryMultipleAsync(spName, param: dp, commandTimeout:300,commandType: System.Data.CommandType.StoredProcedure);
 
                     ResultDto sDto = sManys.ReadFirstOrDefault<ResultDto>();
                     if (sDto == null) sDto = new ResultDto();

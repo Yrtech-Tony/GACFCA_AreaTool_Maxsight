@@ -115,9 +115,9 @@ namespace FIAT.API.Controllers
         //查询一个经销商下的所有任务
         [HttpGet("{disCode}/{startTime}/{endTime}/{status}/{Pid}")]
         [ActionName("GetTaskListByDisIdForExcel")]
-        public Task<APIResult> GetTaskListByDisIdForExcel(string disCode, string startTime, string endTime, string status, string Pid)
+        public Task<APIResult> GetTaskListByDisIdForExcel(string disCode, string startTime, string endTime, string status, string pid)
         {
-            return _tourService.GetTaskListByDisIdForExcel(disCode, startTime, endTime, status, Pid);
+            return _tourService.GetTaskListByDisIdForExcel(disCode, startTime, endTime, status, pid);
         }
         [HttpPost]
         [ActionName("RegCustomizedImpItem")]
