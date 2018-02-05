@@ -138,17 +138,19 @@
 
             var loginUserType = '@Context.Request.Cookies[SessionKeys.SESSION_USERTYPE]';
             if (loginUserType == 'R') {
-                $("#btnCreate").show();
-                $("#btnExcelUpload").show();
-                $("#btnExcelDown").show();
+                $("#btnCreate").show();                
             }else{
                 $("#btnCreate").hide();
+                $("#btnExcelUpload").hide();
+                $("#btnExcelDown").hide();
                 $("#btnExcelUpload").hide();
                 $("#btnExcelDown").hide();
             }
             if (loginUserType == 'A') {
                 $("#btnExcelUploadForUpdate").show();
                 $("#btnExcelDownForUpdate").show();
+                $("#btnExcelUpload").show();
+                $("#btnExcelDown").show();
             }else{
                 $("#btnExcelUploadForUpdate").hide();
                 $("#btnExcelDownForUpdate").hide();
