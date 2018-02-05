@@ -137,23 +137,16 @@
             });
 
             var loginUserType = '@Context.Request.Cookies[SessionKeys.SESSION_USERTYPE]';
+
             if (loginUserType == 'R') {
-                $("#btnCreate").show();                
-            }else{
-                $("#btnCreate").hide();
-                $("#btnExcelUpload").hide();
-                $("#btnExcelDown").hide();
-                $("#btnExcelUpload").hide();
-                $("#btnExcelDown").hide();
+                $("#btnCreate").show();
             }
+
             if (loginUserType == 'A') {
                 $("#btnExcelUploadForUpdate").show();
                 $("#btnExcelDownForUpdate").show();
                 $("#btnExcelUpload").show();
                 $("#btnExcelDown").show();
-            }else{
-                $("#btnExcelUploadForUpdate").hide();
-                $("#btnExcelDownForUpdate").hide();
             }
         }
 
@@ -655,20 +648,20 @@
                 <button id="btnSearch" class="btn btn-primary">
                     <span class="fa fa-search gap-icon"></span>查询
                 </button>
-                <button id="btnCreate" class="btn btn-primary">
+                <button id="btnCreate" class="btn btn-primary"  style="display:none">
                     <span class="fa fa-plus gap-icon"></span>制作
                 </button>
-                <button id="btnExcelUpload" class="btn btn-primary">
+                <button id="btnExcelUpload" class="btn btn-primary" style="display:none">
                     <span class="fa fa-file-excel-o gap-icon"></span>Excel上传
                 </button>
-                <button id="btnExcelDown" class="btn btn-primary">
+                <button id="btnExcelDown" class="btn btn-primary" style="display:none">
                     <span class="fa fa-file-excel-o gap-icon"></span>Excel模板下载
                 </button>
                 <a href="~/Template/计划任务模板.xlsx" class="aline" id="a" style="display:none">Excel模板下载</a>
-                <button id="btnExcelUploadForUpdate" class="btn btn-primary">
+                <button id="btnExcelUploadForUpdate" class="btn btn-primary" style="display:none">
                     <span class="fa fa-file-excel-o gap-icon"></span>近期指标得分上传
                 </button>
-                <button id="btnExcelDownForUpdate" class="btn btn-primary">
+                <button id="btnExcelDownForUpdate" class="btn btn-primary" style="display:none">
                     <span class="fa fa-file-excel-o gap-icon"></span>近期指标得分模板下载
                 </button>
             </div>
