@@ -137,11 +137,20 @@ namespace FIAT.Web.Controllers
                                     .Trim('"');
                     filename = $@"\{filename}";
                     size += file.Length;
-                    using (var fs = new FileStream(Path.Combine(uploads, file.FileName), FileMode.Create))
+                    try
                     {
-                        file.CopyTo(fs);
-                        fs.Flush();
+                        using (var fs = new FileStream(Path.Combine(uploads, file.FileName), FileMode.Create))
+                        {
+                            file.CopyTo(fs);
+                            fs.Flush();
+                        }
                     }
+                    catch (Exception)
+                    {
+
+                       
+                    }
+                    
 
                     //string url = CommonHelper.Current.GetExcelAPIBaseUrl + "excel?filepath=" + @"C:\inetpub\FIAT.Web\wwwroot\uploads\Template.xlsx&sheetName=Plans";
                    // string url = await CommonHelper.GetHttpClient().GetStringAsync(CommonHelper.Current.GetExcelAPIBaseUrl + "excel?filepath=" + @"C:\inetpub\FIAT.Web\wwwroot\uploads\Template.xlsx&sheetName=Plans");
