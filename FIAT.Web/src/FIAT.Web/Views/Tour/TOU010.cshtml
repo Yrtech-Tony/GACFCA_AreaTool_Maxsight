@@ -242,7 +242,7 @@
             var selType =$("#selVisitType").val();
             if(selType == "D" || selType == "E"){
                 var popHeight = 250;
-                var popWidth = 500;
+                var popWidth = 550;
                 $.sa.pop('/Tour/SetSales', {
                     height: popHeight, width: popWidth, title: '<span class="fa fa-hand-o-right gap-icon-right"></span><span>销售人员设置</span>',
                     params: {
@@ -252,12 +252,16 @@
                     }
                   , popcallback: function (msg) {
                       if (msg != null && msg.length > 0) {
-                          fn_Start(rowId,operation,obj);
+                          $.sa.warning("指标中有分层级打分项，打分时请注意");
+                          fn_Start(rowId,operation,obj); 
+                          _grid2.hideCol("LastScore").setGridWidth("450");
+                          //.trigger("reloadGrid");
                       }
                   }
                 });            
             } else{
-                fn_Start(rowId,operation,obj);            
+                fn_Start(rowId,operation,obj);
+                
             }       
         }
 
@@ -781,13 +785,13 @@
                             formatter: fn_ScoreReg, unformat: fn_UnScoreReg
                         },
                         {
-                            name: 'Title', label: "指标名称", width: 142, align: 'left',
+                            name: 'Title', label: "指标名称",width:190, align: 'left',
                             cellattr: function (rowId, val, rawObject, cm, rdata) {
                                 return 'class="readonlycell"';
                             }
                         },
                         {
-                            name: 'TIWeight', label: '权重', width: 60, align: 'right',
+                            name: 'TIWeight', label: '权重', width: 50, align: 'right',
                             cellattr: function (rowId, val, rawObject, cm, rdata) {
                                 return 'class="readonlycell"';
                             }, formatter: function (cellvalue, options, rowObject) {
@@ -795,13 +799,13 @@
                             }
                         },
                         {
-                            name: 'PassYN', label: '是否达标', width: 63, align: 'center', editable: false,
+                            name: 'PassYN', label: '是否达标', width: 65, align: 'center', editable: false,
                             cellattr: function (rowId, val, rawObject, cm, rdata) {
                                 return 'class="readonlycell"';
                             }
                         },
                         {
-                            name: 'LastScore', label: '明检得分', width: 63, align: 'center', editable: false,
+                            name: 'LastScore', label: '明检得分', width: 65, align: 'center', editable: false,
                             cellattr: function (rowId, val, rawObject, cm, rdata) {
                                 return 'class="readonlycell"';
                             }
@@ -841,8 +845,8 @@
                             name: 'TIId', label: 'TIId', width: 50, align: 'center', editable: false, hidden: true
                         }
                 ],
-                width:'300px',
-                shrinkToFit:false,
+                autowidth:true,
+                shrinkToFit:true,
                 height: 'auto',
                 rownumbers: true,
                 rownumWidth: 40,
@@ -898,10 +902,11 @@
 
         function fn_SetGrid2(mydata) {
             mydata = mydata || [];
+
             _grid2.clearGridData()
                 .setGridParam({
                     data: mydata
-                }).trigger('reloadGrid');
+                }).trigger("reloadGrid");
             localdata = mydata;
         }
 

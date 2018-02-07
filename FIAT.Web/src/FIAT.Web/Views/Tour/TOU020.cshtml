@@ -227,9 +227,14 @@
                              fn_SetGrid2([]);
                              fn_SetGrid(JSON.parse(data.body));
                              if (JSON.parse(data.body).length > 0) {
-                                 var showContent="总得分：<span style='font-weight:bold; font-size:18px;'>" + JSON.parse(data.body)[0].STScore + "</span>";
+                                 var STScore = JSON.parse(data.body)[0].STScore;
+                                 if (STScore > 100) {
+                                     STScore = 100;
+                                 }
+                                 var LastPScore = JSON.parse(data.body)[0].LastPScore;
+                                 var showContent="总得分：<span style='font-weight:bold; font-size:18px;'>" + STScore + "</span>";
                                  if (JSON.parse(data.body)[0].LastPScore){
-                                     showContent = "近期明检总分：<span style='font-weight:bold; font-size:18px;'>" + JSON.parse(data.body)[0].LastPScore + "</span>&nbsp;&nbsp;" + showContent;
+                                     showContent = "近期明检总分：<span style='font-weight:bold; font-size:18px;'>" + LastPScore + "</span>&nbsp;&nbsp;" + showContent;
                                  }
                                  $("#divDealerTScore").html(showContent);
 
