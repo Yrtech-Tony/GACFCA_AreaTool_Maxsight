@@ -419,8 +419,6 @@
         }
         function fn_ClosePlanById() {
             var item = { Id: '@ViewBag.PId' }
-            console.log("select item ",item)
-            return;
             // $.sa.post('http://fiatqaapi.elandcloud.com/fiat/api/v1/PlanTask/ClosePlanById',
             $.sa.post(TASKCLOSEPLANBYID,
                      JSON.stringify(item),
