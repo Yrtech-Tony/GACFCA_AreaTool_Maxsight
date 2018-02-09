@@ -22,6 +22,7 @@
     .gap-icon {
         margin-right: 5px;
     }
+
 </style>
 @section scripts{
     <!-- 1. Load -->
@@ -45,6 +46,15 @@
             fn_SetVType();
 
             $("#selVisitType").on("change", function () {
+                var selType = $("#selVisitType").val();
+                if (selType == "D" || selType == "E") {
+                    _grid.setGridParam().clearGridData().hideCol("LastTCScore").setGridWidth("544").trigger('reloadGrid');
+                    _grid2.setGridParam().clearGridData().hideCol("LastScore").setGridWidth("450").trigger('reloadGrid');                    
+                } else {
+                    _grid.setGridParam().clearGridData().showCol("LastTCScore").setGridWidth("542").trigger('reloadGrid');
+                    _grid2.setGridParam().clearGridData().showCol("LastScore").setGridWidth("450").trigger('reloadGrid');
+                }
+
                 fn_getPlans();
                 if ($("#selVisitType").val() == 'B') {
                     $.sa.warning("客服区域巡检中:道路救援响应率、召回完成率系统权重为0%,总部统一打分，现场巡检总分为79分");
@@ -126,7 +136,6 @@
     <!-- 2. Init -->
     <script type="text/javascript">
         function fn_Initialize() {
-
             _gridName = 'gridTask';
             _grid = $('#' + _gridName);
 
@@ -135,8 +144,8 @@
         }
         function fn_InitGrid() {
             fn_GridInit();
-
             fn_GridInit2();
+            $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
         }
         function fn_SetControlsByType() {
             _pageType = fn_ReturnStatus();
@@ -284,6 +293,10 @@
             return "";
         }
         function fn_Start(rowId, operation, obj) {
+            var selType =$("#selVisitType").val();
+            if (selType == "D" || selType == "E") {
+                _grid2.hideCol("LastScore").setGridWidth("450");
+            }
             var rowObject = $("#gridTask").jqGrid('getRowData', rowId);
             _tpStatus = rowObject.TPStatus;
             if (_tpStatus == "检查完成") {
@@ -533,7 +546,7 @@
                             formatter: fn_SearchDetail, unformat: fn_UnSearchDetail, hidden: false
                         },
                         {
-                            name: 'TCTitle', label: "模块简介", width: 200, align: 'left',
+                            name: 'TCTitle', label: "模块简介", align: 'left',
                             cellattr: function (rowId, val, rawObject, cm, rdata) {
                                 return 'class="readonlycell"';
                             }
@@ -601,9 +614,8 @@
                         }
 
                 ],
-                //width: $('#Grid').width(),
-                width: '300px',
-                shrinkToFit: false,
+                width: 540,
+                shrinkToFit: true,
                 height: 'auto',
                 rownumbers: true,
                 rownumWidth: 50,
@@ -666,7 +678,7 @@
                             formatter: fn_ScoreReg, unformat: fn_UnScoreReg
                         },
                         {
-                            name: 'Title', label: "指标名称", width: 142, align: 'left',
+                            name: 'Title', label: "指标名称", align: 'left',
                             cellattr: function (rowId, val, rawObject, cm, rdata) {
                                 return 'class="readonlycell"';
                             }
@@ -723,8 +735,8 @@
                             name: 'TIId', label: 'TIId', width: 50, align: 'center', editable: false, hidden: true
                         }
                 ],
-                width: '300px',
-                shrinkToFit: false,
+                autowidth: true,
+                shrinkToFit: true,
                 height: 'auto',
                 rownumbers: true,
                 rownumWidth: 50,

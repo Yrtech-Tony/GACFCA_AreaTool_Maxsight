@@ -57,6 +57,14 @@
             fn_SetVType();
 
             $("#selVisitType").on("change",function(){
+                var selType =$("#selVisitType").val();
+                if(selType == "D" || selType == "E"){  
+                    _grid.setGridParam().clearGridData().hideCol("LastTCScore").setGridWidth("542").trigger('reloadGrid');
+                    _grid2.setGridParam().clearGridData().hideCol("LastScore").setGridWidth("458").trigger('reloadGrid');
+                }else{
+                    _grid.setGridParam().clearGridData().showCol("LastTCScore").setGridWidth("542");
+                    _grid2.setGridParam().clearGridData().showCol("LastScore").setGridWidth("458");
+                }               
                 fn_getPlans();
             });
 
@@ -138,6 +146,7 @@
         function fn_InitGrid() {
             fn_GridInit();
             fn_GridInit2();
+            $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
         }
         function fn_SetServerData(){
             if ($("#selPlanLst").val()==="select") {
@@ -254,8 +263,6 @@
                       if (msg != null && msg.length > 0) {
                           $.sa.warning("指标中有分层级打分项，打分时请注意");
                           fn_Start(rowId,operation,obj); 
-                          _grid2.hideCol("LastScore").setGridWidth("450");
-                          //.trigger("reloadGrid");
                       }
                   }
                 });            
@@ -645,6 +652,7 @@
         function fn_GridInit() {
             _grid.jqGrid({
                 datatype: 'local',
+                width:540,
                 colModel: [
                         {
                             name: 'TCCode', label: "任务代码", width: 200, align: 'center',
@@ -682,7 +690,7 @@
                             }
                         },
                         {
-                            name: 'TCTitle', label: "模块简介", width: 160, align: 'left',
+                            name: 'TCTitle', label: "模块简介", align: 'left',
                             cellattr: function (rowId, val, rawObject, cm, rdata) {
                                 return 'class="readonlycell"';
                             }
@@ -720,11 +728,11 @@
                         }
 
                 ],
-                //width: $('#Grid').width(),
-                width: '300px',
-                shrinkToFit:false,
+                autowidth:true,
+                shrinkToFit:true,
                 height: 'auto',
                 rownumbers: true,
+                multiselect: true,
                 rownumWidth: 40,
                 rowNum: 10,
                 rowList: [10, 20, 30],
@@ -734,6 +742,7 @@
                 cellEdit: true,
                 editurl: 'clientArray',
                 viewrecords: true,
+                
                 gridComplete: function (id) {
                     var rowNum = parseInt($(this).getGridParam("records"), 10);
                     if (rowNum > 0) {
@@ -773,6 +782,7 @@
         function fn_GridInit2() {
             _grid2.jqGrid({
                 datatype: 'local',
+                width:460,
                 colModel: [
                         {
                             name: 'SeqNo', label: "执行顺序", width: 80, align: 'center',hidden:true,
