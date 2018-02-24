@@ -47,7 +47,7 @@
 
             $("#selVisitType").on("change", function () {
                 var selType = $("#selVisitType").val();
-                if (selType == "D" || selType == "E") {
+                if (selType == "D" || selType == "E" || selType == "F" || selType == "G") {
                     _grid.setGridParam().clearGridData().hideCol("LastTCScore").setGridWidth("544").trigger('reloadGrid');
                     _grid2.setGridParam().clearGridData().hideCol("LastScore").setGridWidth("450").trigger('reloadGrid');                    
                 } else {
@@ -294,7 +294,7 @@
         }
         function fn_Start(rowId, operation, obj) {
             var selType =$("#selVisitType").val();
-            if (selType == "D" || selType == "E") {
+            if (selType == "D" || selType == "E" || selType == "F" || selType == "G") {
                 _grid2.hideCol("LastScore").setGridWidth("450");
             }
             var rowObject = $("#gridTask").jqGrid('getRowData', rowId);

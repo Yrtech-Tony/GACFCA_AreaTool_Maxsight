@@ -8,10 +8,15 @@
 @section Scripts{
     <script>
         $(function () {
-
-            if (Request["selType"] == "E") {
+            var selType = Request["selType"];
+            if (selType == "E") {
                 $("#SalsInsideDiv").hide();
+            } else if (selType == "F") {
+                $("#SalesManagerDiv span").html('<font color="red">* </font>客户经理');
+                $("#SalesConsultantDiv span").html('<font color="red">* </font>零件经理');
+                $("#SalsInsideDiv span").html('<font color="red">* </font>保修专员');                
             }
+
             var item = {
                 DisId: Request["disId"],
                 Batch: Request["batch"]
@@ -65,13 +70,13 @@
 }
 
 <div class="row gap-top" style="line-height:30px">
-    <div class="col-md-12">
+    <div class="col-md-12" id="SalesManagerDiv">
         <div class="input-group">
             <span class="input-group-addon title-sm"  style="width:180px"><font color="red">* </font>销售经理/销售DCC经理</span>
             <input type="text" class="form-control inputMaxWidth" id="SalesManager">
         </div>
     </div>
-    <div class="col-md-12" style="text-align: right;padding-top:  5px;">
+    <div class="col-md-12" style="text-align: right;padding-top:  5px;" id="SalesConsultantDiv">
         <div class="input-group">
             <span class="input-group-addon title-sm " style="width:180px"><font color="red">* </font>销售顾问/直销员</span>
             <input type="text" class="form-control inputMaxWidth" id="SalesConsultant">

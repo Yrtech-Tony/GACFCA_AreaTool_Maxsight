@@ -269,7 +269,7 @@ namespace FIAT.Web.Controllers
                         CellRangeAddress region3_2 = new CellRangeAddress(3, 3, 5, 6);
                         sheet1.AddMergedRegion(region3_2);
                         
-                        if (visitType == "D" || visitType == "E")
+                        if (visitType == "D" || visitType == "E" || visitType == "F")
                         {
                             //DMS 和 卖车宝
                             string plansPosition = await CommonHelper.GetHttpClient().GetStringAsync(string.Format("{0}/Tour/GetPlansPosition?batch={1}&disId={2}", CommonHelper.Current.GetAPIBaseUrl, batch, disCode));
@@ -288,7 +288,14 @@ namespace FIAT.Web.Controllers
                                 string txtManager = "销售经理：" + dic["SalesManager"];
                                 string txtConsultant = "销售顾问：" + dic["SalesConsultant"];
                                 string txtInside = "销售内勤：" + dic["SalesInside"];
-                                if (visitType == "D")
+                                if (visitType == "F")
+                                {
+                                    txtManager = "客户经理：" + dic["SalesManager"];
+                                    txtConsultant = "零件经理：" + dic["SalesConsultant"];
+                                    txtInside = "保修专员：" + dic["SalesInside"];
+                                }
+
+                                if (visitType == "D" || visitType == "F")
                                 {
                                     cells[0].SetCellValue(txtManager);                                    
                                     cells[2].SetCellValue(txtConsultant);

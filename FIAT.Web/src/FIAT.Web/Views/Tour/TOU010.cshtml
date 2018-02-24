@@ -58,7 +58,7 @@
 
             $("#selVisitType").on("change",function(){
                 var selType =$("#selVisitType").val();
-                if(selType == "D" || selType == "E"){  
+                if(selType == "D" || selType == "E"|| selType == "F" || selType == "G"){  
                     _grid.setGridParam().clearGridData().hideCol("LastTCScore").setGridWidth("542").trigger('reloadGrid');
                     _grid2.setGridParam().clearGridData().hideCol("LastScore").setGridWidth("458").trigger('reloadGrid');
                 }else{
@@ -249,11 +249,11 @@
 
         function fn_Start_Proxy(rowId, operation, obj){
             var selType =$("#selVisitType").val();
-            if(selType == "D" || selType == "E"){
+            if(selType == "D" || selType == "E" || selType == "F"){
                 var popHeight = 250;
                 var popWidth = 550;
                 $.sa.pop('/Tour/SetSales', {
-                    height: popHeight, width: popWidth, title: '<span class="fa fa-hand-o-right gap-icon-right"></span><span>销售人员设置</span>',
+                    height: popHeight, width: popWidth, title: '<span class="fa fa-hand-o-right gap-icon-right"></span><span>人员设置</span>',
                     params: {
                         batch:$("#selPlanLst").val(),
                         disId:_disId,
@@ -261,7 +261,12 @@
                     }
                   , popcallback: function (msg) {
                       if (msg != null && msg.length > 0) {
-                          $.sa.warning("卖车宝建档占比”及“卖车宝内容营销图文转发率”两项内容已根据不同达成率各自拆分为两个指标；打分时同一考核内容下的两个指标，请至多选择一项达标，即现场情况符合其中一个指标的达成率范围；或现场情况两指标内对应的达成率均不符合亦可");
+                          if(selType == "E"){                              
+                              $.sa.warning("卖车宝建档占比”及“卖车宝内容营销图文转发率”两项内容已根据不同达成率各自拆分为两个指标；打分时同一考核内容下的两个指标，请至多选择一项达标，即现场情况符合其中一个指标的达成率范围；或现场情况两指标内对应的达成率均不符合亦可");
+                          }else if(selType == "F"){
+                              $.sa.warning("检核提示：客户经理及零件经理各有3项检核内容，每项下属2个指标，每个岗位选择任意2项内容进行检核，若其中指标均达成，则该岗位剩余指标请默认选“是”；若任意指标未达成，需正常考核岗位内剩余指标；保修专员全部内容均为必考。");                          
+                          }
+                         
                           fn_Start(rowId,operation,obj); 
                       }
                   }
