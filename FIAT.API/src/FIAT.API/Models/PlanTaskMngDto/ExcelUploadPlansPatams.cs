@@ -20,6 +20,7 @@ namespace FIAT.API.Models.PlanTaskMngDto
     }
     public class ExcelPlans
     {
+        public string BigAreaUserName { get; set; }
         public string Title { get; set; }
         public string DisId { get; set; }
         public string VisitDateTime { get; set; }
@@ -29,6 +30,7 @@ namespace FIAT.API.Models.PlanTaskMngDto
     }
     public class ExcelTaskOfPlans
     {
+        public string BigAreaUserName { get; set; }
         public string TPTitle { get; set; }
         public string TPDescription { get; set; }
         public string PId { get; set; }
