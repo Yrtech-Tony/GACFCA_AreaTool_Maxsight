@@ -628,7 +628,8 @@ namespace FIAT.API.Service
                 {
                     try
                     {
-                        await conn.ExecuteAsync(spName, dp, tran, null, CommandType.StoredProcedure);
+                        
+                        await conn.ExecuteAsync(spName, dp, tran,300, CommandType.StoredProcedure);
                         tran.Commit();
                     }
                     catch (Exception ex)
