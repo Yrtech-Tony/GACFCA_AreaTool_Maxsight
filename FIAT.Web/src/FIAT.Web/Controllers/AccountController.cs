@@ -93,7 +93,7 @@ namespace FIAT.Web.Controllers
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 ViewBag.ErrorLoginMessage = "未查询到用户信息,请重试。";
                 Login();
