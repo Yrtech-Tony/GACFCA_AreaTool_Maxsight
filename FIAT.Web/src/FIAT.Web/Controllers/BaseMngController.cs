@@ -49,6 +49,11 @@ namespace FIAT.Web.Controllers
         {
             return View();
         }
+        //[PermissionRequired]
+        public IActionResult BAS050()
+        {
+            return View();
+        }
         [HttpPost]
         public async Task<ActionResult> UploadPostTarget()
         {
