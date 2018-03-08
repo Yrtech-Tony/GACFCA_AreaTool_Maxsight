@@ -1,6 +1,6 @@
 ﻿@{
     Layout = "_LayoutMenu";
-    ViewData["Title"] = "小区管理";
+    ViewData["Title"] = "区域管理";
 }
 @section HeadCss{
     <style>
@@ -41,9 +41,7 @@
             $("#selBusLst").change(function () {
                 fn_SetRepData();
             });
-            $("#selRepLst").change(function () {
-                fn_SetZoneData();
-            });
+
             $("#btnAddDis").click(function () {
                 fn_Addrow();
             });
@@ -74,9 +72,7 @@
                       busList=data.body;
                       $("#selBusLst").html(JsonToCboList("BName", "BId", JSON.parse(busList), { 'SelectType': 'All' }));
                       $("#selRepLst").html(JsonToCboList("EName", "EId", null, { 'SelectType': 'All' }));
-                      $("#selZionLst").html(JsonToCboList("QName", "QId", null, { 'SelectType': 'All' }));
                       fn_SetRepData();
-                      fn_SetZoneData();
                   },
                   "failure": function (data, statusText, jqXHR) {
                   }
@@ -92,24 +88,6 @@
                 }
             });
             fn_SetZoneData();
-        }
-        //区域
-        function fn_SetZoneData() {
-            var currentBus = $("#selBusLst").val();
-            var currentRep = $("#selRepLst").val();
-            var data =JSON.parse(busList);
-            for (var i = 0; i < data.length; i++) {
-                if (data[i].BId ==currentBus ) {
-                    repList =  data[i].RepList;
-                    break;
-                }
-            }
-            $("#selZionLst").html(JsonToCboList("QName", "QId", null, { 'SelectType': 'All' }));
-            $.each(repList, function (i, v) {
-                if (v.EId == currentRep) {
-                    $("#selZionLst").html(JsonToCboList("QName", "QId", v.ZionList, { 'SelectType': 'All' }));
-                }
-            });
         }
     </script>
     <!--Save-->
@@ -205,21 +183,10 @@
                          }
                      },
                     {
-                        name: 'ZDisName', label: '区域名称', width: 70, align: 'left',
-                        cellattr: function (rowId, val, rawObject, cm, rdata) {
-                            return 'class="readonlycell"';
-                        }
-                    },{
-                        name: 'ADisId', label: '小区ID', width: 30, align: 'center',hidden:false,
-                        cellattr: function (rowId, val, rawObject, cm, rdata) {
-                            return 'class="readonlycell"';
-                        }
+                        name: 'SCode', label: '区域编号', width: 60, editable: true, edittype: "text", align: 'left'
                     },
                     {
-                        name: 'SCode', label: '小区编号', width: 60, editable: true, edittype: "text", align: 'left'
-                    },
-                    {
-                        name: 'ADisName', label: '小区名称', width: 70, editable: true, edittype: "text", align: 'left'
+                        name: 'ZDisName', label: '区域名称', width: 70, editable: true, edittype: "text", align: 'left'
                     },
                     {
                         name: 'CreateDate', label: '创建日期', width: 45, align: 'center',
@@ -317,13 +284,6 @@
                     }
                 });
                 return;
-            }else if ($("#selZionLst").val() == "0") {
-                $.sa.warning("请先选择区域", {
-                    fnClose: function () {
-                        $("#selZionLst").focus();
-                    }
-                });
-                return;
             }
 
             if (ids && ids.length > 0) {
@@ -334,11 +294,9 @@
             }
             newid = pref + (newid).toString();
             var rowdata = {
-                ZDisName: $("#selZionLst option:selected").text(),
-                ADisName: '',
-                ZDisId: $("#selZionLst").val(),
-                ADisId: '',
                 SCode: "",
+                ZDisName: '',
+                ZDisId: '',
                 CreateDate: '',
                 UseYN: 'True',
                 BDisName: $("#selBusLst option:selected").text(),
@@ -375,9 +333,7 @@
     <script type="text/javascript">
         function fn_SearchData() {
             var disId = "";
-            if ($("#selZionLst").val() != '0') {
-                disId = $("#selZionLst").val();
-            }else if ($("#selRepLst").val() !="0") {
+            if ($("#selRepLst").val() !="0") {
                 disId = $("#selRepLst").val();
             }else if ($("#selBusLst").val() !="0") {
                 disId = $("#selBusLst").val();
@@ -457,7 +413,7 @@
 <div class="row gap-top">
     <div class="col-md-12">
         <span class="fa fa-flag fa-lg gap-icon"></span><span class="page-mtitle">基础设置</span><span>&nbsp;>&nbsp;</span>
-        <span class="page-title">小区管理</span>
+        <span class="page-title">区域管理</span>
         <div class="pull-right">
             <button class="btn btn-primary" id="btnSearch">
                 <span class="fa fa-search gap-icon"></span>查询
@@ -487,18 +443,14 @@
     </div>
 </form>
 <div class="row gap-top">
-    <div class="col-md-12">
+    <div class="col-md-8">
         <div class="input-group">
             <span class="input-group-addon title-sm">组织结构</span>
-            <select class="form-control" style="width:33%" id="selBusLst"></select><!--营销区，客户服务区-->
-            <select class="form-control" style="width:33%" id="selRepLst"></select><!--大区-->
-            <select class="form-control" style="width:33%" id="selZionLst"></select><!--区域-->
+            <select class="form-control" style="width:50%" id="selBusLst"></select><!--营销区，客户服务区-->
+            <select class="form-control" style="width:50%" id="selRepLst"></select><!--大区-->
         </div>
     </div>
-
-</div>
-<div class="row gap-top">
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="input-group">
             <span class="input-group-addon title-sm">使用与否</span>
             <div class="form-control" id="rdo">
@@ -523,10 +475,10 @@
     <div class="col-md-12 col-sm-12">
         <div class="pull-right">
             <button class="btn btn-primary" id="btnAddDis">
-                <span class="fa fa-plus gap-icon"></span>添加小区
+                <span class="fa fa-plus gap-icon"></span>添加区域
             </button>
             <button class="btn btn-primary" id="btnRemoveDis">
-                <span class="fa fa-minus gap-icon"></span>删除小区
+                <span class="fa fa-minus gap-icon"></span>删除区域
             </button>
         </div>
     </div>

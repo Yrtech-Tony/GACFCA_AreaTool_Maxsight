@@ -49,8 +49,18 @@ namespace FIAT.Web.Controllers
         {
             return View();
         }
-        //[PermissionRequired]
+        [PermissionRequired]
         public IActionResult BAS050()
+        {
+            return View();
+        }
+        [PermissionRequired]
+        public IActionResult BAS060()
+        {
+            return View();
+        }
+        [PermissionRequired]
+        public IActionResult BAS070()
         {
             return View();
         }
