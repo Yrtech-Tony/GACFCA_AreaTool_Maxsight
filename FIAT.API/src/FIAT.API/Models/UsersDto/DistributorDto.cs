@@ -13,6 +13,6 @@ namespace FIAT.API.Models.DistributorDto
         public bool UseYN { get; set; }
         public int InUserId { get; set; }
         public DateTime InDateTime { get; set; }
-        public string LoginName { get; set; }// 登录账号
+        public string LoginName { get; set; }// 登录账号dfdf
     }
 }
