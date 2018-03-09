@@ -261,7 +261,7 @@ namespace FIAT.API.Service
             string spName = @"up_RMMT_BAS_AreaInfo_R";
             DynamicParameters dp = new DynamicParameters();
             dp.Add("@DisId", DisId == null ? "" : DisId);
-            dp.Add("@Type", type == null ? "" : type);
+            dp.Add("@Type", Type == null ? "" : Type);
             dp.Add("@UseYN", UseYN == null ? "" : UseYN);
 
             using (var conn = new SqlConnection(DapperContext.Current.SqlConnection))
@@ -269,7 +269,7 @@ namespace FIAT.API.Service
                 conn.Open();
                 try
                 {
-                    IEnumerable<DisInfoDto> list = await conn.QueryAsync<DisInfoDto>(spName, dp, null, null, CommandType.StoredProcedure);
+                    IEnumerable<DistributorDto> list = await conn.QueryAsync<DistributorDto>(spName, dp, null, null, CommandType.StoredProcedure);
                     string message = "";
                     if (list.Count() == 0)
                     {
