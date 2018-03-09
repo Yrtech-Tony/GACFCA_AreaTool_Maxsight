@@ -72,6 +72,7 @@ var UPDATECASESINFO = BASE_URL + "CasesInfo/UpdateCaseInfo";
 var SAVEEMPLOYEEINFO = BASE_URL + "Users/SaveEmployeeInfo";
 var GETEMPLOYEEINFO = BASE_URL + "Users/GetEmployeeInfo";
 var GETDISTRIBUTORINFO = BASE_URL + "Users/GetDistributorInfo";
+var GETDISTRIBUTORINFO2 = BASE_URL + "Users/GetDistributorInfo2";
 var SAVEDISTRIBUTORINFO = BASE_URL + "Users/SaveDistributorInfo";
 var GETORGINFO = BASE_URL + "Users/GetOrgInfo";
 var GETGROUPLIST = BASE_URL + "Users/GetGroupList";

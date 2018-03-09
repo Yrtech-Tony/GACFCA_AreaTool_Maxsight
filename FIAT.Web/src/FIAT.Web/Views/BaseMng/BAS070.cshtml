@@ -303,9 +303,10 @@
                 disId = $("#selBusLst").val();
             }
             $.sa.get(
-                GETDISTRIBUTORINFO
+                GETDISTRIBUTORINFO2
                 , {
                     DisId: disId,
+                    Type:"E",
                     UseYN: $("[name=UseYN]").filter(":Checked").val()
                 },
             {
