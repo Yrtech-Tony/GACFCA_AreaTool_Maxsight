@@ -108,12 +108,12 @@
                 return false;
             }
             $(editData).each(function () {
-                if (this.SCode == "") {
+                if (this.Code == "") {
                     isValiCode = false;
                 }
             });
             $(editData).each(function () {
-                if (this.SDisName == "") {
+                if (this.Name == "") {
                     isVali = false;
                 }
             });
@@ -126,6 +126,12 @@
         }
         function fn_Save() {
             $(".close").click();
+            $(editData).each(function () {
+                this.Id = '0';
+                this.Type='E';
+                delete this.id;
+                delete this.rn;
+            });
             var param = { XmlData: editData, UserId: '@Context.Request.Cookies[SessionKeys.SESSION_USERID]' };
             $.sa.post(
              SAVEDISTRIBUTORINFO2,
