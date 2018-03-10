@@ -70,6 +70,7 @@ var GETEMPLOYEEINFO = BASE_URL + "Users/GetEmployeeInfo";
 var GETDISTRIBUTORINFO = BASE_URL + "Users/GetDistributorInfo";
 var GETDISTRIBUTORINFO2 = BASE_URL + "Users/GetDistributorInfo2";
 var SAVEDISTRIBUTORINFO = BASE_URL + "Users/SaveDistributorInfo";
+var SAVEDISTRIBUTORINFO2 = BASE_URL + "Users/SaveDistributorInfo2";
 var GETORGINFO = BASE_URL + "Users/GetOrgInfo";
 var GETGROUPLIST = BASE_URL + "Users/GetGroupList";
 var GETTYPELIST = BASE_URL + "Users/GetTypeList";

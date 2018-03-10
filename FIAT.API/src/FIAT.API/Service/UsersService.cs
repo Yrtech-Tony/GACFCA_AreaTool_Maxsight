@@ -320,7 +320,7 @@ namespace FIAT.API.Service
             {
                 string spName = @"up_RMMT_BAS_InsertAreaInfo_S";
 
-                string XmlData = CommonHelper.Serializer(typeof(List<DisInfoDto>), disInfoDto.XmlData);
+                string XmlData = CommonHelper.Serializer(typeof(List<DistributorDto>), disInfoDto.XmlData);
                 DynamicParameters dp = new DynamicParameters();
                 dp.Add("@XmlData", XmlData);
                 dp.Add("@UserId", disInfoDto.UserId);
