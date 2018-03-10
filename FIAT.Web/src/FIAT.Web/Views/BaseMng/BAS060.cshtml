@@ -87,7 +87,6 @@
                     $("#selRepLst").html(JsonToCboList("EName", "EId", v.RepList, { 'SelectType': 'All' }));
                 }
             });
-            fn_SetZoneData();
         }
     </script>
     <!--Save-->
@@ -146,50 +145,27 @@
                      , $("body"));
         }
     </script>
+   
     <!--Grid & Event-->
     <script type="text/javascript">
         function fn_GridInit() {
             _grid.jqGrid({
                 datatype: 'local',
                 colModel: [
-                    {
-                        name: 'BDisId', label: '业务分区ID', width: 30, align: 'center',hidden:true,
-                        cellattr: function (rowId, val, rawObject, cm, rdata) {
-                            return 'class="readonlycell"';
-                        }
-                    },
-                    {
-                        name: 'BDisName', label: '业务分区名称', width: 70, align: 'left',
-                        cellattr: function (rowId, val, rawObject, cm, rdata) {
-                            return 'class="readonlycell"';
-                        }
-                    },
-                    {
-                        name: 'EDisId', label: '大区ID', width: 30, align: 'center',
-                        cellattr: function (rowId, val, rawObject, cm, rdata) {
-                            return 'class="readonlycell"';
-                        }
-                    },
-                    {
-                        name: 'EDisName', label: '大区名称', width: 70, align: 'left',
-                        cellattr: function (rowId, val, rawObject, cm, rdata) {
-                            return 'class="readonlycell"';
-                        }
-                    },
                      {
-                         name: 'ZDisId', label: '区域ID', width: 30, align: 'center',
+                         name: 'Id', label: '区域ID', width: 30, align: 'center',
                          cellattr: function (rowId, val, rawObject, cm, rdata) {
                              return 'class="readonlycell"';
                          }
                      },
                     {
-                        name: 'SCode', label: '区域编号', width: 60, editable: true, edittype: "text", align: 'left'
+                        name: 'Code', label: '区域编号', width: 60, editable: true, edittype: "text", align: 'left'
                     },
                     {
-                        name: 'ZDisName', label: '区域名称', width: 70, editable: true, edittype: "text", align: 'left'
+                        name: 'Name', label: '区域名称', width: 70, editable: true, edittype: "text", align: 'left'
                     },
                     {
-                        name: 'CreateDate', label: '创建日期', width: 45, align: 'center',
+                        name: 'InDateTime', label: '创建日期', width: 45, align: 'center',
                         cellattr: function (rowId, val, rawObject, cm, rdata) {
                             return 'class="readonlycell"';
                         }
@@ -213,9 +189,9 @@
                 editurl: 'clientArray',
                 viewrecords: true,
                 afterInsertRow: function (rowid, r) {
-                    if (r.SDisId !="") {
-                        $(this).find('#' + rowid).find("[aria-describedby='grid_SCode']").addClass("readonlycell");
-                        $(this).find('#' + rowid).find("[aria-describedby='grid_SDisName']").addClass("readonlycell");
+                    if (r.Id !="") {
+                        $(this).find('#' + rowid).find("[aria-describedby='grid_Code']").addClass("readonlycell");
+                        $(this).find('#' + rowid).find("[aria-describedby='grid_Name']").addClass("readonlycell");
                     }
                 },
                 gridComplete: function (id) {
@@ -240,8 +216,8 @@
                 },
                 beforeEditCell: function (rowid, cellname, v, iRow, iCol) {
                     var $t = $(this);
-                    var sDisId = $t.getCell(rowid, 'SDisId');
-                    if (sDisId != "") {
+                    var Id = $t.getCell(rowid, 'Id');
+                    if (Id != "") {
                         setTimeout(function () {
                             $t.restoreCell(rowid, cellname);
                         }, 1);
