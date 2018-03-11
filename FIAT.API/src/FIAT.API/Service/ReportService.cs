@@ -25,6 +25,7 @@ namespace FIAT.API.Service
         Task<APIResult> GetTouProgressForZone(int busId, int repId, int areaId, int zoneId, int batchId);
         Task<APIResult> SearchTCScoreOFAIdsByEPlan(string RegionId, string BatchId, string AreaId);
         Task<APIResult> GetTourBaseScoreByDisId(string UserId, string DisId, int Batch);
+        Task<APIResult> GetAllDataByDisIdForExcel(string batchId);
     }
     public class ReportService : IReportService
     {
@@ -381,6 +382,34 @@ namespace FIAT.API.Service
                 return new APIResult { Body = "", ResultCode = ResultType.Failure, Msg = ex.Message };
             }
 
+        }
+
+        public async Task<APIResult> GetAllDataByDisIdForExcel(string batchId)
+        {
+            try
+            {
+                string spName = @"up_RMMT_REP_GetTCScoreOFAIdsByEPlan_AllDis_R";
+
+                DynamicParameters dp = new DynamicParameters();
+                dp.Add("@BatchId", batchId, DbType.String);
+
+                using (var conn = new SqlConnection(DapperContext.Current.SqlConnection))
+                {
+                    conn.Open();
+                    IEnumerable<STCScoreDto> list = await conn.QueryAsync<STCScoreDto>(spName, dp, null, null, CommandType.StoredProcedure);
+                    string message = "";
+                    if (list.Count() == 0)
+                    {
+                        message = "没有数据";
+                    }
+                    APIResult result = new APIResult { Body = CommonHelper.EncodeDto<STCScoreDto>(list), ResultCode = ResultType.Success, Msg = message };
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                return new APIResult { Body = "", ResultCode = ResultType.Failure, Msg = ex.Message };
+            }
         }
     }
 }

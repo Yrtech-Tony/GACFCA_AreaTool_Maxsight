@@ -803,5 +803,21 @@ namespace FIAT.Web.Controllers
         {
             return View();
         }
+        [HttpPost]
+        public async Task<ActionResult> GetAllExcelData(string BatchId)
+        {
+            string result = await CommonHelper.GetHttpClient().GetStringAsync(CommonHelper.Current.GetAPIBaseUrl + "Report/GetAllDataByDisIdForExcel/" + BatchId);
+            var apiResult = CommonHelper.DecodeString<APIResult>(result);
+
+            if (apiResult.ResultCode == ResultType.Success)
+            {
+                IEnumerable<STCScoreDto> list = CommonHelper.DecodeString<IEnumerable<STCScoreDto>>(apiResult.Body);
+
+            }
+                string uploads = Path.Combine(_environment.WebRootPath, "Template");
+            string reportName = "";
+            var newFile = Path.Combine(uploads, reportName + ".xlsx");
+            return Json(newFile);
+        }
     }
 }

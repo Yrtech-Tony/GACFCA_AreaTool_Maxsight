@@ -896,6 +896,12 @@
             if (fn_searchValidate(false))
                 GetRExcelData();
         });
+
+        $('#btnExcelDownloadAll').on('click', function () {
+            if (fn_exportAllDataValidate())
+                GetAllExcelData();
+        });
+        
     </script>
     <!--ExcelDownloadA-->
     
@@ -1167,28 +1173,32 @@
         //在用
         var _thead;
         function FormatEDataSecondR_o() {
-            var thead = $.map(_rExcelData.RATCList, function (x, o) { return { TCTitle: x.TCTitle, TCId: x.TCId }; });
-
-            _thead = thead.unique_o();
-            //thead.unshift("序号", "区域名称", "区域类型", "总得分");            
-
             var arryList = [];
-            var th = $.map(_thead, function (x, o) { return x.TCTitle; });
-            th.unshift("序号", "区域名称", "区域类型", "总得分");
-            arryList.push(th);
-            $.each(_rExcelData.RAPList, function (x, obj) {
-                var sList= $.map(_thead, function (item, y) {
-                    var temp = $.map(_rExcelData.RATCList, function (z, o) { if (z.AreaId == obj.DisId && z.TCId==item.TCId) return z; });
-                    if (temp&& temp.length > 0)
-                        return temp[0].TCScore;
-                    else
-                        return "";
+            if (_rExcelData.RATCList.length > 0) {
+                var thead = $.map(_rExcelData.RATCList, function (x, o) {
+                    return { TCTitle: x.TCTitle, TCId: x.TCId };
                 });
-                var dis = $.map(_rExcelData.RATCList, function (z, o) { if (z.AreaId == obj.DisId) return z.ATScore; });
-                sList.unshift(x + 1, obj.DisName, obj.DType, dis[0]);
-                arryList[x + 1] = sList;
+                _thead = thead.unique_o();
+                //thead.unshift("序号", "区域名称", "区域类型", "总得分");   
+              
+                var th = $.map(_thead, function (x, o) { return x.TCTitle; });
+                th.unshift("序号", "区域名称", "区域类型", "总得分");
+                arryList.push(th);
+                $.each(_rExcelData.RAPList, function (x, obj) {
+                    var sList = $.map(_thead, function (item, y) {
+                        var temp = $.map(_rExcelData.RATCList, function (z, o) { if (z.AreaId == obj.DisId && z.TCId == item.TCId) return z; });
+                        if (temp && temp.length > 0)
+                            return temp[0].TCScore;
+                        else
+                            return "";
+                    });
+                    var dis = $.map(_rExcelData.RATCList, function (z, o) { if (z.AreaId == obj.DisId) return z.ATScore; });
+                    sList.unshift(x + 1, obj.DisName, obj.DType, dis[0]);
+                    arryList[x + 1] = sList;
 
-            });
+                });
+            }
+           
             return arryList;
 
         }
@@ -1304,10 +1314,48 @@
             setFontStyle(rc, 9, false);
         }
 
+
+        //下载全部数据的报告
+        function GetAllExcelData() {
+            $.ajax({
+                type: "POST",
+                url: "/Report/GetAllExcelData",
+                data: { BatchId: $.trim($("#selPlanTask").val()) },
+                contentType: false,
+                processData: false,
+                //data: data,
+                success: function (message) {
+                    document.getElementById("a").href = "/Template/" + message.split('\\')[message.split('\\').length - 1];
+                    document.getElementById("a").click();
+                },
+                beforeSend: function () {
+                    $("#modal-container-loadbar").css("display", "block");
+                    spinner.spin(document.getElementById('loadBar'));
+                },
+                complete: function () {
+                    spinner.stop();
+                    $("#modal-container-loadbar").css("display", "none");
+                },
+                error: function () {
+                    $.sa.warning("下载失败,请重试.");
+                }
+            });
+        }
     </script>
 
     <!--SearchValidate-->
     <script type="text/javascript">
+        function fn_exportAllDataValidate() {
+            if ($.trim($("#selPlanTask").val()) == "" || $.trim($("#selPlanTask").val()) == "select") {
+                $.sa.warning("请选择巡检月份", {
+                    title: "警告！", fnClose: function () {
+                        $("#selPlanTask").focus();
+                    }
+                });
+                return false;
+            }
+            return true;
+        }
         function fn_searchValidate(flag) {
             var isValiE = true;
             var isValiA = true;
@@ -1463,6 +1511,9 @@
             </button>*@
             <button class="btn btn-primary hidden-xs" id="btnExcelDownloadR">
                 <span class="fa fa-file-excel-o gap-icon"></span>Excel导出
+            </button>
+            <button class="btn btn-primary hidden-xs" id="btnExcelDownloadAll">
+                <span class="fa fa-file-excel-o gap-icon"></span>导出全部区域报告
             </button>
         </div>
     </div>
