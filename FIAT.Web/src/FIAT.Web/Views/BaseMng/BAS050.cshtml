@@ -114,13 +114,14 @@
             $(editData).each(function () {
                 this.Id = '0';
                 this.Type='E';
+                this.ParentId = $("#selBusLst").val();
                 delete this.id;
                 delete this.rn;
             });
             var param = { XmlData: editData, UserId: '@Context.Request.Cookies[SessionKeys.SESSION_USERID]' };
             $.sa.post(
-                "http://localhost:5000/fiat/api/v1/Users/SaveDistributorInfo2",
-             //SAVEDISTRIBUTORINFO2,
+                //"http://localhost:5000/fiat/api/v1/Users/SaveDistributorInfo2",
+             SAVEDISTRIBUTORINFO2,
                 JSON.stringify(param),
                      {
                          "success": function (data) {
@@ -254,13 +255,11 @@
             }
             newid = pref + (newid).toString();
             var rowdata = {
-                SCode: "",
-                ZDisName: '',
-                ZDisId: '',
-                CreateDate: '',
+                Id: '',                
+                Code: "",
+                Type:'E',
+                Name: '',
                 UseYN: 'True',
-                BDisName: $("#selBusLst option:selected").text(),
-                BDisId: $("#selBusLst").val(),
             };
             _grid.addRowData(newid, rowdata, 'last');
             $(_grid.getGridRowById(newid)).addClass("edited");

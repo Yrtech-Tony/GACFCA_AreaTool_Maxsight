@@ -151,7 +151,8 @@
             $(".close").click();
             $(editData).each(function () {
                 this.Id = '0';
-                this.Type='E';
+                this.Type='Z';
+                this.ParentId = $("#selZionLst").val();
                 delete this.id;
                 delete this.rn;
             });
@@ -305,17 +306,12 @@
             }
             newid = pref + (newid).toString();
             var rowdata = {
-                ZDisName: $("#selZionLst option:selected").text(),
-                ADisName: '',
-                ZDisId: $("#selZionLst").val(),
-                ADisId: '',
-                SCode: "",
-                CreateDate: '',
+                Id: '',
+                ParentId: $("#selBusLst").val(),
+                Code: "",
+                Type:'Z',
+                Name: '',
                 UseYN: 'True',
-                BDisName: $("#selBusLst option:selected").text(),
-                EDisName: $("#selRepLst option:selected").text(),
-                BDisId: $("#selBusLst").val(),
-                EDisId: $("#selRepLst").val(),
             };
             _grid.addRowData(newid, rowdata, 'last');
             $(_grid.getGridRowById(newid)).addClass("edited");
