@@ -158,6 +158,7 @@
                     },
                     {
                         name: 'InDateTime', label: '创建日期', width: 45, align: 'center',
+                        formatter:"date", formatoptions: {newformat:'Y-m-d'},
                         cellattr: function (rowId, val, rawObject, cm, rdata) {
                             return 'class="readonlycell"';
                         }
@@ -377,13 +378,6 @@
             <button id="btnSave" class="btn btn-primary">
                 <span class="fa fa-save gap-icon"></span>保存
             </button>
-            <button id="btnExcelUpload" class="btn btn-primary">
-                <span class="fa fa-file-excel-o gap-icon"></span>Excel上传
-            </button>
-            <button id="btnExcelDown" class="btn btn-primary">
-                <span class="fa fa-file-excel-o gap-icon"></span>Excel模板下载
-            </button>
-            <a href="~/Template/大区登记模板.xlsx" class="aline" id="a" style="display:none">Excel模板下载</a>
         </div>
     </div>
 </div>
