@@ -941,20 +941,21 @@
               });
 
         }
-        function fn_setsheet1Header(sheet, data) {
-           
+        function fn_setsheet1Header(sheet, data) {           
             for (var x = 0; x < 2; x++) {
                 var h = sheet.addRow();
                 h.isCustom = false;
-                var hd = objOfValueToArr(data[x])
-                var c1 = setCellHeader_o(h, hd[0]);
-                var c2 = setCellHeader_o(h, hd[1]);
-                if (x == 0) {
-                    c1.vMerge = 1;
-                    c2.vMerge = 1;
+                var hd = objOfValueToArr(data[x]);
+                hd.unshift("大区代码", "大区名称", "区域代码", "区域名称", "小区代码", "小区名称");
+                for(var i=0;i<8;i++){
+                    var c1 = setCellHeader_o(h, hd[i]);
+                    if (x == 0) {
+                        c1.vMerge = 1;
+                    }                
                 }
-                for (var y = 2; y < hd.length; y++) {
-                    setCellHeader_o(h, y==2? x==0?"审计项目":"权重":hd[y]);
+               
+                for (var y = 8; y < hd.length; y++) {
+                    setCellHeader_o(h, y==8? x==0?"审计项目":"权重":hd[y]);
                 }
 
             }
@@ -964,26 +965,26 @@
                 r.isCustom = false;
                 var rowd=objOfValueToArr(data[x])
                 for(var y=0;y<rowd.length;y++){
-                    setCellData_o(r,y==2? "得分" : rowd[y], 'center');
+                    setCellData_o(r,y==8? "得分" : rowd[y], 'center');
                 }
             }
         }
         function fn_setsheet2Header(sheet, data) {
-
             for (var x = 0; x < 2; x++) {
                 var h = sheet.addRow();
                 h.isCustom = false;
-                var hd = objOfValueToArr(data[x])
-                var c1 = setCellHeader_o(h, hd[0]);
-                var c2 = setCellHeader_o(h, hd[1]);
-                if (x == 0) {
-                    c1.vMerge = 1;
-                    c2.vMerge = 1;
-                }
-                for (var y = 2; y < hd.length; y++) {
-                    setCellHeader_o(h, y == 2 ? x == 0 ? "审计项目" : "检查标准" : hd[y]);
+                var hd = objOfValueToArr(data[x]);
+                hd.unshift("大区代码", "大区名称", "区域代码", "区域名称", "小区代码", "小区名称");
+                for (var i = 0; i < 8; i++) {
+                    var c1 = setCellHeader_o(h, hd[i]);
+                    if (x == 0) {
+                        c1.vMerge = 1;
+                    }
                 }
 
+                for (var y = 8; y < hd.length; y++) {
+                    setCellHeader_o(h, y == 8 ? x == 0 ? "审计项目" : "检查标准" : hd[y]);
+                }
             }
 
             for (var x = 2; x < data.length; x++) {
@@ -991,7 +992,7 @@
                 r.isCustom = false;
                 var rowd = objOfValueToArr(data[x])
                 for (var y = 0; y < rowd.length; y++) {
-                    setCellData_o(r, y == 2 ? "得分" : rowd[y], 'center');
+                    setCellData_o(r, y == 8 ? "得分" : rowd[y], 'center');
                 }
             }
             //sheet.setColWidth(0, objOfValueToArr(data[0]).length - 1, 20);

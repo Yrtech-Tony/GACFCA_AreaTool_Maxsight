@@ -75,7 +75,7 @@ namespace FIAT.API.Controllers
         }
         //查询一个经销商下的所有任务
         [HttpGet("{batchId}")]
-        [ActionName("GetTaskListByDisIdForExcel")]
+        [ActionName("GetAllDataByDisIdForExcel")]
         public Task<APIResult> GetAllDataByDisIdForExcel(string batchId)
         {
             return _reportService.GetAllDataByDisIdForExcel(batchId);

@@ -813,11 +813,66 @@ namespace FIAT.Web.Controllers
             {
                 IEnumerable<STCScoreDto> list = CommonHelper.DecodeString<IEnumerable<STCScoreDto>>(apiResult.Body);
 
-            }
                 string uploads = Path.Combine(_environment.WebRootPath, "Template");
-            string reportName = "";
-            var newFile = Path.Combine(uploads, reportName + ".xlsx");
-            return Json(newFile);
+                string reportName = BatchId+ "_数据报告_"+DateTime.Now.ToString("yyyyMMddHHmmssfff");
+                var newFile = Path.Combine(uploads, reportName + ".xlsx");
+
+                if (!Directory.Exists(uploads))
+                {
+                    Directory.CreateDirectory(uploads);
+                }
+                using (var fs = new FileStream(newFile, FileMode.Create, FileAccess.Write))
+                {
+
+                    IWorkbook workbook = new XSSFWorkbook();
+
+                    //ISheet sheet1 = workbook.CreateSheet("检核结果");
+                    ISheet sheet1 = workbook.CreateSheet(BatchId+"_数据报告");
+
+                    sheet1.FitToPage = true;
+                    sheet1.PrintSetup.FitWidth = 1;
+                    sheet1.PrintSetup.FitHeight = 0;
+                    sheet1.PrintSetup.PaperSize = 9;
+                    sheet1.SetMargin(MarginType.RightMargin, 0);
+
+                    IFont font_b = workbook.CreateFont();
+                    font_b.FontName = "微软雅黑";
+                    font_b.FontHeightInPoints = 10;
+
+                    IFont font_c = workbook.CreateFont();
+                    font_c.FontName = "微软雅黑";
+                    font_c.FontHeightInPoints = 10;
+                    font_c.Color = HSSFColor.White.Index;
+                    font_c.IsBold = true;
+
+                    byte[] rgb5 = new byte[3] { 217, 217, 217 };
+                    byte[] rgb6 = new byte[3] { 221, 217, 196 };
+                    byte[] rgb7 = new byte[3] { 32, 55, 100 };
+
+                    var style1 = (XSSFCellStyle)workbook.CreateCellStyle();
+                    //style1.FillForegroundColor = HSSFColor.Grey25Percent.Index;
+
+                    byte[] rgb = new byte[3] { 116, 163, 210 };
+                    style1.SetFillForegroundColor(new XSSFColor(rgb));
+
+                    style1.FillPattern = FillPattern.SolidForeground;
+                    style1.Alignment = HorizontalAlignment.Center;
+                    style1.BorderLeft = BorderStyle.Thin;
+                    style1.BorderBottom = BorderStyle.Thin;
+                    style1.BorderRight = BorderStyle.Thin;
+                    style1.BorderTop = BorderStyle.Thin;
+                    style1.SetFont(font_b);
+
+                    IRow rowHead = sheet1.CreateRow(6);
+                    //string[] titles = 
+                    //ICell cell_score = rowHead.CreateCell(0);
+                    //cell_score.SetCellValue("检核结果汇总");
+                    //CellRangeAddress region_score = new CellRangeAddress(6, 6, 0, 4);
+                    //cell_score.CellStyle = style_sub;
+                    //sheet1.AddMergedRegion(region_score);
+                }
+            }
+            return Json("");
         }
     }
 }
