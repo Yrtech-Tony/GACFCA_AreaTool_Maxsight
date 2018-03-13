@@ -177,6 +177,19 @@
                     fn_downLoadZoneReport();
                 }
             });
+            $("#btnExportAll").on("click", function () {
+                if ($("#selBusLst").val() == null || $("#selBusLst").val() == "select") {
+                    $.sa.warning("请选择业务类型");
+                    $("#selBusLst").focus();
+                    return;
+                } else if ($("#selPlanLst").val() == "select") {
+                    $.sa.warning("请选择巡检月份");
+                    $("#selPlanLst").focus();
+                    return;
+                } else {
+                    fn_downLoadAll();
+                }
+           });            
         }
     </script>
     <!-- 3. InitData -->
@@ -713,6 +726,58 @@
 
                               }
                           }, $("body"));
+        }
+
+        function fn_downLoadAll() {
+            var yearMonth = $("#selPlanLst").val();
+            var busType = $("#selBusLst").val();
+            var busTypeName = $("#selBusLst").find("option:selected").text();
+            var opts = {
+                type: "Image",
+                imageUrl: "/images/ajax-loader.gif",
+                lines: 10, // loading小块的数量
+                length: 0, // 小块的长度
+                width: 18, // 小块的宽度
+                radius: 40, // 整个圆形的半径
+                corners: 1, // 小块的圆角，越大则越圆
+                rotate: 10, // loading动画的旋转度数，貌似没什么实际作用
+                color: '#047EC4', // 颜色
+                speed: 1, // 变换速度
+                trail: 60, // 余晖的百分比
+                shadow: false, // 是否渲染出阴影
+                hwaccel: false, // 是否启用硬件加速
+                className: 'spinner', // 给loading添加的css样式名
+                zIndex: 2e9, // The z-index (defaults to 2000000000)
+                top: '50%', // Top position relative to parent in px
+                left: '50%' // Left position relative to parent in px
+            };
+            var spinner = new Spinner(opts).spin(document.getElementById('loadBar'));
+        
+            $.ajax({
+                type: "POST",
+                url: "/PerMng/StaffAjaxDownAll?yearMonth=" + yearMonth + "&busType=" + busType + "&busTypeName=" + busTypeName,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    if (data.resultCode == 1) {
+                        $.sa.warning(data.msg);
+                    } else {
+                        document.getElementById("ad").href = "/Template/" + data.body.split('\\')[data.body.split('\\').length - 1];
+                        document.getElementById("ad").click();
+                    }                   
+                },
+                beforeSend: function () {
+                    $("#modal-container-loadbar").css("display", "block");
+                    spinner.spin(document.getElementById('loadBar'));
+                },
+                complete: function () {
+                    spinner.stop();
+                    $("#modal-container-loadbar").css("display", "none");
+                },
+                error: function () {
+                    $.sa.warning("下载失败,请重试.");
+                }
+            });
         }
 
         function fn_downLoadZoneReport() {
@@ -1442,6 +1507,9 @@
             </button>
             <button id="btnExportZone" class="btn btn-primary hidden-xs">
                 <span class="fa fa-file-excel-o gap-icon"></span>小区报告
+            </button>
+            <button id="btnExportAll" class="btn btn-primary hidden-xs">
+                <span class="fa fa-file-excel-o gap-icon"></span>全国人员信息导出
             </button>
             <button class="btn btn-primary" id="btnSearch">
                 <span class="fa fa-search gap-icon"></span>查询

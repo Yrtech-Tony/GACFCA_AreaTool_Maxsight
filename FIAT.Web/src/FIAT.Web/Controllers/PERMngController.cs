@@ -250,11 +250,11 @@ namespace FIAT.Web.Controllers
                                 cell_un_1.CellStyle = style3;
 
                                 ICell cell_un_2 = row_un.CreateCell(2);
-                                cell_un_2.SetCellValue(list[i].DMSRate+"%");
+                                cell_un_2.SetCellValue(list[i].DMSRate + "%");
                                 cell_un_2.CellStyle = style3;
 
                                 ICell cell_un_3 = row_un.CreateCell(3);
-                                cell_un_3.SetCellValue(list[i].AuthenticateRate+"%");
+                                cell_un_3.SetCellValue(list[i].AuthenticateRate + "%");
                                 cell_un_3.CellStyle = style3;
 
                                 ICell cell_un_4 = row_un.CreateCell(4);
@@ -679,6 +679,346 @@ namespace FIAT.Web.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<ActionResult> StaffAjaxDownAll(string yearMonth, int busType, string busTypeName)
+        {
+
+            string result = await CommonHelper.GetHttpClient().GetStringAsync(CommonHelper.Current.GetAPIBaseUrl + "PerMng/GetStaffZoneReport?yearMonth=" + yearMonth + "&zoneId=0" + "&busType=" + busType);
+            var apiResult = CommonHelper.DecodeString<APIResult>(result);
+            if (apiResult.ResultCode == ResultType.Success)
+            {
+                StaffZoneReport er = CommonHelper.DecodeString<StaffZoneReport>(apiResult.Body);
+                List<StaffZoneReportDto> list = er.ZoneReportList;
+                List<StaffInfo> staffList = er.StaffPostInfoList;
+                if (staffList == null || staffList.Count == 0)
+                {
+                    return Json(new APIResult(){ ResultCode = ResultType.Failure, Msg = "没有数据" });
+                }
+                int totalStaffCnt = (from a in list select a.PostCnt).Sum();
+                int totalquietCnt = (from a in list select a.QuitCnt).Sum();
+
+                var uploads = Path.Combine(_environment.WebRootPath, "Template");
+                var newFile = Path.Combine(uploads, busTypeName + "_" + "人员信息_" + DateTime.Now.ToString("yyyyMMdd hhmmss") + ".xlsx");
+                if (!System.IO.Directory.Exists(uploads))
+                {
+                    System.IO.Directory.CreateDirectory(uploads);
+                }
+                using (var fs = new FileStream(newFile, FileMode.Create, FileAccess.Write))
+                {
+                    IWorkbook workbook = new XSSFWorkbook();
+
+                    ISheet sheet1 = workbook.CreateSheet("人员小区报告");
+
+                    IFont font_b = workbook.CreateFont();
+                    font_b.FontName = "微软雅黑";
+                    font_b.FontHeightInPoints = 10;
+
+                    var style1 = (XSSFCellStyle)workbook.CreateCellStyle();
+
+                    byte[] rgb = new byte[3] { 116, 163, 210 };
+                    style1.SetFillForegroundColor(new XSSFColor(rgb));
+
+                    style1.FillPattern = FillPattern.SolidForeground;
+                    style1.Alignment = HorizontalAlignment.Center;
+                    style1.BorderLeft = BorderStyle.Thin;
+                    style1.BorderBottom = BorderStyle.Thin;
+                    style1.BorderRight = BorderStyle.Thin;
+                    style1.BorderTop = BorderStyle.Thin;
+                    style1.SetFont(font_b);
+
+                    var style_b2 = workbook.CreateCellStyle();
+                    style_b2.WrapText = true;
+                    style_b2.VerticalAlignment = VerticalAlignment.Center;
+                    style_b2.SetFont(font_b);
+
+
+                    var style2 = workbook.CreateCellStyle();
+                    style2.Alignment = HorizontalAlignment.Left;
+                    style2.SetFont(font_b);
+
+                    var style3 = workbook.CreateCellStyle();
+                    style3.Alignment = HorizontalAlignment.Right;
+                    style3.SetFont(font_b);
+
+                    var style4 = workbook.CreateCellStyle();
+                    style4.Alignment = HorizontalAlignment.Center;
+                    style4.VerticalAlignment = VerticalAlignment.Center;
+                    style4.SetFont(font_b);
+
+                    int dataCount = 0;
+
+                    IRow row_n = sheet1.CreateRow(dataCount);
+
+                    //所属大区
+                    ICell cell_n_0 = row_n.CreateCell(0);
+                    cell_n_0.SetCellValue("所属大区");
+                    cell_n_0.CellStyle = style1;
+                    sheet1.SetColumnWidth(0, 6 * 600);
+                    //所属区域
+                    ICell cell_n_1 = row_n.CreateCell(1);
+                    cell_n_1.SetCellValue("所属区域");
+                    cell_n_1.CellStyle = style1;
+                    sheet1.SetColumnWidth(1, 6 * 600);
+                    //所属小区
+                    ICell cell_n_2 = row_n.CreateCell(2);
+                    cell_n_2.SetCellValue("所属小区");
+                    cell_n_2.CellStyle = style1;
+                    sheet1.SetColumnWidth(2, 6 * 600);
+                    //经销商
+                    ICell cell_n_3 = row_n.CreateCell(3);
+                    cell_n_3.SetCellValue("经销商");
+                    cell_n_3.CellStyle = style1;
+                    sheet1.SetColumnWidth(3, 6 * 600);
+                    //岗位
+                    ICell cell_n_4 = row_n.CreateCell(4);
+                    cell_n_4.SetCellValue("岗位");
+                    cell_n_4.CellStyle = style1;
+                    sheet1.SetColumnWidth(4, 6 * 600);
+                    //姓名
+                    ICell cell_n_5 = row_n.CreateCell(5);
+                    cell_n_5.SetCellValue("姓名");
+                    cell_n_5.CellStyle = style1;
+                    sheet1.SetColumnWidth(5, 4 * 600);
+
+
+                    //身份证号
+                    ICell cell_n_6 = row_n.CreateCell(6);
+                    cell_n_6.SetCellValue("身份证号");
+                    cell_n_6.CellStyle = style1;
+                    sheet1.SetColumnWidth(6, 10 * 600);
+
+                    //状态
+                    ICell cell_n_7 = row_n.CreateCell(7);
+                    cell_n_7.SetCellValue("状态");
+                    cell_n_7.CellStyle = style1;
+                    sheet1.SetColumnWidth(7, 4 * 600);
+
+                    //是否DMS备案
+                    ICell cell_n_8 = row_n.CreateCell(8);
+                    cell_n_8.SetCellValue("是否DMS备案");
+                    cell_n_8.CellStyle = style1;
+                    sheet1.SetColumnWidth(8, 5 * 600);
+
+
+                    //是否通过认证
+                    ICell cell_n_9 = row_n.CreateCell(9);
+                    cell_n_9.SetCellValue("是否通过认证");
+                    cell_n_9.CellStyle = style1;
+                    sheet1.SetColumnWidth(9, 5 * 600);
+
+                    //机电等级
+                    ICell cell_n_10 = row_n.CreateCell(10);
+                    cell_n_10.SetCellValue("机电等级");
+                    cell_n_10.CellStyle = style1;
+                    sheet1.SetColumnWidth(10, 5 * 600);
+
+                    //技术主管等级
+                    ICell cell_n_11 = row_n.CreateCell(11);
+                    cell_n_11.SetCellValue("技术主管等级");
+                    cell_n_11.CellStyle = style1;
+                    sheet1.SetColumnWidth(11, 6 * 600);
+
+                    //是否兼职
+                    ICell cell_n_12 = row_n.CreateCell(12);
+                    cell_n_12.SetCellValue("是否兼职");
+                    cell_n_12.CellStyle = style1;
+                    sheet1.SetColumnWidth(12, 4 * 600);
+
+                    int cellcnt = 0;
+                    for (int i = 1; i < 4; i++)
+                    {
+                        //兼职岗位1
+                        ICell cell_n_13 = row_n.CreateCell(13 + cellcnt);
+                        cell_n_13.SetCellValue("兼职岗位" + i);
+                        cell_n_13.CellStyle = style1;
+                        sheet1.SetColumnWidth(13 + cellcnt, 6 * 600);
+                        cellcnt++;
+
+                        //DMS备案
+                        ICell cell_n_14 = row_n.CreateCell(13 + cellcnt);
+                        cell_n_14.SetCellValue("是否DMS备案");
+                        cell_n_14.CellStyle = style1;
+                        sheet1.SetColumnWidth(13 + cellcnt, 5 * 600);
+                        cellcnt++;
+
+                        //是否通过认证
+                        ICell cell_n_15 = row_n.CreateCell(13 + cellcnt);
+                        cell_n_15.SetCellValue("是否通过认证");
+                        cell_n_15.CellStyle = style1;
+                        sheet1.SetColumnWidth(13 + cellcnt, 5 * 600);
+                        cellcnt++;
+                    }
+                    //数据的动态加载
+                    for (int i = 0; i < staffList.Count; i++)
+                    {
+                        object r = "r_" + i;
+                        r = sheet1.CreateRow(dataCount + 1 + i);
+                        int cnum = 0;
+
+                        //所属大区
+                        object c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].BName);
+                        (c as ICell).CellStyle = style_b2;
+                        cnum++;
+
+                        //所属区域
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].AreaName);
+                        (c as ICell).CellStyle = style_b2;
+                        cnum++;
+
+                        //所属小区
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].ZoneName);
+                        (c as ICell).CellStyle = style_b2;
+                        cnum++;
+
+                        //经销商
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].DisName);
+                        (c as ICell).CellStyle = style_b2;
+                        cnum++;
+
+                        //职位
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].PostCode);
+                        (c as ICell).CellStyle = style_b2;
+                        cnum++;
+
+                        //姓名
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].Name);
+                        (c as ICell).CellStyle = style_b2;
+                        cnum++;
+
+                        //身份证号码
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].IDNo);
+                        (c as ICell).CellStyle = style4;
+                        cnum++;
+
+                        //状态
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].Status);
+                        (c as ICell).CellStyle = style4;
+                        cnum++;
+
+                        //是否DMS备案
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].DMSYN);
+                        (c as ICell).CellStyle = style4;
+                        cnum++;
+
+
+                        //是否通过认证
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].AuthenticateYN);
+                        (c as ICell).CellStyle = style4;
+                        cnum++;
+
+                        //机电等级
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].LevelM2);
+                        (c as ICell).CellStyle = style_b2;
+                        cnum++;
+
+                        //技术主管等级
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].LevelM1);
+                        (c as ICell).CellStyle = style_b2;
+                        cnum++;
+
+                        //是否兼职
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].PartTimeJobYN);
+                        (c as ICell).CellStyle = style4;
+                        cnum++;
+
+                        //兼职岗位1
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].PartTimeJob1);
+                        (c as ICell).CellStyle = style_b2;
+                        cnum++;
+
+                        //是否DMS备案
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].DMSYN1);
+                        (c as ICell).CellStyle = style4;
+                        cnum++;
+
+                        //是否通过认证
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].AuthenticateYN1);
+                        (c as ICell).CellStyle = style4;
+                        cnum++;
+
+                        //兼职岗位2
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].PartTimeJob2);
+                        (c as ICell).CellStyle = style_b2;
+                        cnum++;
+
+                        //是否DMS备案
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].DMSYN2);
+                        (c as ICell).CellStyle = style4;
+                        cnum++;
+
+                        //是否通过认证
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].AuthenticateYN2);
+                        (c as ICell).CellStyle = style4;
+                        cnum++;
+
+                        //兼职岗位3
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].PartTimeJob3);
+                        (c as ICell).CellStyle = style_b2;
+                        cnum++;
+
+                        //是否DMS备案
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].DMSYN3);
+                        (c as ICell).CellStyle = style4;
+                        cnum++;
+
+                        //是否通过认证
+                        c = "c_" + cnum;
+                        c = (r as IRow).CreateCell(cnum);
+                        (c as ICell).SetCellValue(staffList[i].AuthenticateYN3);
+                        (c as ICell).CellStyle = style4;
+                        cnum++;
+
+                    }
+
+                    workbook.Write(fs);
+                    return Json(new APIResult() { ResultCode = ResultType.Success,Body = newFile });
+                }
+            }
+            return Json(new APIResult() { ResultCode = ResultType.Failure, Msg = "没有查询结果" });
+        }
+
         public IActionResult PMN012()
         {
             return View();
@@ -709,7 +1049,7 @@ namespace FIAT.Web.Controllers
 
                     List<KeyValuePair<string, string>> paramList = new List<KeyValuePair<string, string>>();
                     paramList.Add(new KeyValuePair<string, string>("FullFileName", Path.Combine(uploads, file.FileName)));
-                    paramList.Add(new KeyValuePair<string, string>("SheetNameList", JsonConvert.SerializeObject(new List<string> { "Dealers"})));
+                    paramList.Add(new KeyValuePair<string, string>("SheetNameList", JsonConvert.SerializeObject(new List<string> { "Dealers" })));
                     HttpResponseMessage res = await CommonHelper.GetHttpClient1().PostAsync(CommonHelper.Current.GetExcelAPIBaseUrl, new FormUrlEncodedContent(paramList));
                     result = res.Content.ReadAsStringAsync().Result;
                 }
