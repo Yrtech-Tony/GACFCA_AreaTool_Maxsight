@@ -396,13 +396,18 @@ namespace FIAT.API.Service
                 using (var conn = new SqlConnection(DapperContext.Current.SqlConnection))
                 {
                     conn.Open();
-                    IEnumerable<STCScoreDto> list = await conn.QueryAsync<STCScoreDto>(spName, dp, null, null, CommandType.StoredProcedure);
+                    var sManys = await conn.QueryMultipleAsync(spName, param: dp, commandTimeout: 300, commandType: System.Data.CommandType.StoredProcedure);
+                    ResultDto sDto = sManys.ReadFirstOrDefault<ResultDto>();
+                    var asList = sManys.Read<RATCScoreDto>();
+                    var dsList = sManys.Read<STCScoreDto>();
+                    sDto.RATCList.AddRange(asList);
+                    sDto.STCList.AddRange(dsList);
                     string message = "";
-                    if (list.Count() == 0)
+                    if (asList.Count() == 0)
                     {
                         message = "没有数据";
                     }
-                    APIResult result = new APIResult { Body = CommonHelper.EncodeDto<STCScoreDto>(list), ResultCode = ResultType.Success, Msg = message };
+                    APIResult result = new APIResult { Body = CommonHelper.EncodeDto<ResultDto>(sDto), ResultCode = ResultType.Success, Msg = message };
                     return result;
                 }
             }

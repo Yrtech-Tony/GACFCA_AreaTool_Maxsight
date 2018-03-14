@@ -825,8 +825,7 @@ namespace FIAT.Web.Controllers
                 {
 
                     IWorkbook workbook = new XSSFWorkbook();
-
-                    //ISheet sheet1 = workbook.CreateSheet("检核结果");
+                    
                     ISheet sheet1 = workbook.CreateSheet(BatchId+"_数据报告");
 
                     sheet1.FitToPage = true;

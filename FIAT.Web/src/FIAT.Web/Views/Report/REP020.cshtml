@@ -959,7 +959,6 @@
               .then(function (content) {
                   saveAs(content, now);
               });
-
         }
 
         //区域报告  获取下载数据
@@ -1286,8 +1285,6 @@
                     SetCellText_o(r, d[j], 9, false, 'center');
                 }
             }
-
-
         }
         function SetExcelTHeaderR_o(sheet, d) {
             var r = sheet.addRow();
@@ -1314,32 +1311,70 @@
             setFontStyle(rc, 9, false);
         }
 
+        function ExcelDownloadAll() {
+            var file = new xlsx.File();
+            var reportname = $("#selPlanTask>option:selected").text() + "_区域报告";
+            var sheet = file.addSheet(reportname);
+
+            //设置为横向打印
+            sheet.setOrientation('landscape');
+
+            //区域报告  第四部分
+            SetExcelThirdR_o(sheet);
+
+            var now = reportname + ".xlsx";
+            file.saveAs('blob')
+              .then(function (content) {
+                  saveAs(content, now);
+              });
+        }
 
         //下载全部数据的报告
         function GetAllExcelData() {
-            $.ajax({
-                type: "POST",
-                url: "/Report/GetAllExcelData",
-                data: { BatchId: $.trim($("#selPlanTask").val()) },
-                contentType: false,
-                processData: false,
-                //data: data,
-                success: function (message) {
-                    document.getElementById("a").href = "/Template/" + message.split('\\')[message.split('\\').length - 1];
-                    document.getElementById("a").click();
-                },
-                beforeSend: function () {
-                    $("#modal-container-loadbar").css("display", "block");
-                    spinner.spin(document.getElementById('loadBar'));
-                },
-                complete: function () {
-                    spinner.stop();
-                    $("#modal-container-loadbar").css("display", "none");
-                },
-                error: function () {
-                    $.sa.warning("下载失败,请重试.");
-                }
-            });
+            $.sa.get(AREASCORESONTHEPLAN,
+           { RegionId: $.trim($("#selRegion").val()), BatchId: $.trim($("#selPlanTask").val()), AreaId: $.trim($("#selArea").val()) },
+                    {
+                        "success": function (data) {
+                            if (data.resultCode == 0) {
+                                _rExcelData = JSON.parse(data.body);
+                                if (_rExcelData.RATCList == undefined || _rExcelData.RATCList == null || _rExcelData.RATCList.length == 0)
+                                    $.sa.warning("没有可下载的数据", {
+                                        title: "警告！", fnClose: function () {
+                                            $("#btnSearch").focus();
+                                        }
+                                    });
+                                else
+                                    ExcelDownloadAll();
+                            }
+                        },
+                        "failure": function (data, statusText, jqXHR) {
+                            $.sa.warning(data.msg);
+                        }
+                    }, $("body"));           
+
+            //$.ajax({
+            //    type: "POST",
+            //    url: "/Report/GetAllExcelData",
+            //    data: { BatchId: $.trim($("#selPlanTask").val()) },
+            //    contentType: false,
+            //    processData: false,
+            //    //data: data,
+            //    success: function (message) {
+            //        document.getElementById("a").href = "/Template/" + message.split('\\')[message.split('\\').length - 1];
+            //        document.getElementById("a").click();
+            //    },
+            //    beforeSend: function () {
+            //        $("#modal-container-loadbar").css("display", "block");
+            //        spinner.spin(document.getElementById('loadBar'));
+            //    },
+            //    complete: function () {
+            //        spinner.stop();
+            //        $("#modal-container-loadbar").css("display", "none");
+            //    },
+            //    error: function () {
+            //        $.sa.warning("下载失败,请重试.");
+            //    }
+            //});
         }
     </script>
 
