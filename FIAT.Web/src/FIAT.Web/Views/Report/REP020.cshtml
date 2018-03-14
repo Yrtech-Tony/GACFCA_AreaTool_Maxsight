@@ -1319,8 +1319,51 @@
             //设置为横向打印
             sheet.setOrientation('landscape');
 
-            //区域报告  第四部分
-            SetExcelThirdR_o(sheet);
+            var arryList = [];
+            //区域报告
+            var thead = $.map(_rExcelData.RATCList, function (x, o) {
+                return { TCTitle: x.TCTitle, TCId: x.TCId };
+            });
+            _thead = thead.unique_o();
+            
+            var th = $.map(_thead, function (x, o) { return x.TCTitle; });
+            th.unshift("序号", "经销商名称", "经销商代码", "总得分");
+            arryList.push(th);
+
+            _mcount = th.length;
+
+            //经销商
+            var allDis = $.map(_rExcelData.STCList, function (item, y) { return item; });
+            var disList = allDis.unique();
+
+            $.each(disList, function (y, dis) {
+                var sList = $.map(_thead, function (tc, z) {
+                    var t = $.map(_rExcelData.STCList, function (item, j) {
+                        if (item.SDisId == dis.SDisId && item.TCId == tc.TCId)
+                            return item;
+                    });
+                    if (t && t.length > 0)
+                        return t[0].ItemScore
+                    else
+                        return ""
+                });
+                if (sList && sList.length > 0) {
+                    sList.unshift(y + 1, dis.SDisName, dis.SDisCode, dis.STScore);
+                    arryList.push(sList);
+                }
+            });
+
+            var len = arryList.length;
+            if (len <= 0) return;
+            SetExcelTHeaderR_o(sheet, arryList[0])
+            for (var i = 1; i < len; i++) {
+                var d = arryList[i];
+                var r = sheet.addRow();
+                r.isCustom = false;
+                for (var j = 0; j < d.length; j++) {
+                    SetCellText_o(r, d[j], 9, false, 'center');
+                }
+            }
 
             var now = reportname + ".xlsx";
             file.saveAs('blob')
