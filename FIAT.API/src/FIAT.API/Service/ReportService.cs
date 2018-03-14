@@ -397,7 +397,7 @@ namespace FIAT.API.Service
                 {
                     conn.Open();
                     var sManys = await conn.QueryMultipleAsync(spName, param: dp, commandTimeout: 300, commandType: System.Data.CommandType.StoredProcedure);
-                    ResultDto sDto = sManys.ReadFirstOrDefault<ResultDto>();
+                    ResultDto sDto = new ResultDto();
                     var asList = sManys.Read<RATCScoreDto>();
                     var dsList = sManys.Read<STCScoreDto>();
                     sDto.RATCList.AddRange(asList);

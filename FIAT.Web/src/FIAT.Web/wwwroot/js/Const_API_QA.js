@@ -124,6 +124,7 @@ var GETATTACHMENTBYUSERID = BASE_URL + "Report/GetAttachmentByUserId";
 var GETPLANSLISTFOREXCELDOWNLOAD = BASE_URL + "Report/GetPlansListForExcelDownload";
 var AREASCOREONTHEPLAN = BASE_URL + "Report/AreaScoreOnthePlan";
 var AREASCORESONTHEPLAN = BASE_URL + "Report/AreaScoresOnthePlan";
+var GetAllDataByDisIdForExcel = BASE_URL + "Report/GetAllDataByDisIdForExcel";
 var GETTOUPROGRESSFORZONE = BASE_URL + "Report/GetTouProgressForZone";
 var GETTOURBASESCOREBYDISID = BASE_URL + "Report/TourBaseScoreByDisId";
 

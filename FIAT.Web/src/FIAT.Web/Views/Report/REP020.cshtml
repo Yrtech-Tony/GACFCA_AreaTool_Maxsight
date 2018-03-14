@@ -1331,8 +1331,9 @@
 
         //下载全部数据的报告
         function GetAllExcelData() {
-            $.sa.get(AREASCORESONTHEPLAN,
-           { RegionId: $.trim($("#selRegion").val()), BatchId: $.trim($("#selPlanTask").val()), AreaId: $.trim($("#selArea").val()) },
+            $.sa.get("http://101.201.221.141:8005/fiat/api/v1/Report/GetAllDataByDisIdForExcel/"+ $.trim($("#selPlanTask").val()),
+                //GetAllDataByDisIdForExcel,
+           {},
                     {
                         "success": function (data) {
                             if (data.resultCode == 0) {
