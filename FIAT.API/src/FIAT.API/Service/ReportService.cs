@@ -396,7 +396,7 @@ namespace FIAT.API.Service
                 using (var conn = new SqlConnection(DapperContext.Current.SqlConnection))
                 {
                     conn.Open();
-                    var sManys = await conn.QueryMultipleAsync(spName, param: dp, commandTimeout: 300, commandType: System.Data.CommandType.StoredProcedure);
+                    var sManys = await conn.QueryMultipleAsync(spName, param: dp, commandTimeout: 600, commandType: System.Data.CommandType.StoredProcedure);
                     ResultDto sDto = new ResultDto();
                     var asList = sManys.Read<RATCScoreDto>();
                     var dsList = sManys.Read<STCScoreDto>();

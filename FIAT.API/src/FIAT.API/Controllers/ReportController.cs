@@ -74,7 +74,7 @@ namespace FIAT.API.Controllers
             return _reportService.GetTourBaseScoreByDisId(UserId, DisId, Batch);
         }
         //查询一个经销商下的所有任务
-        [HttpGet("{batchId}")]
+        [HttpGet]
         [ActionName("GetAllDataByDisIdForExcel")]
         public Task<APIResult> GetAllDataByDisIdForExcel(string batchId)
         {

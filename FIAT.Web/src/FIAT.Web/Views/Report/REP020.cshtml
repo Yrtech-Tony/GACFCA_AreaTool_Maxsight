@@ -220,7 +220,7 @@
         }
         function fn_BindBranchType(orgb, selType) {
             var option = '';
-            if(selType=='ALL')
+            if (selType == 'ALL')
                 option = "<option value='0'>- 全部 -</option>";
             $.each(orgb, function (idx, ele) {
                 option += "<option value='" + ele.BId + "' tag='" + ele.BCode + "'>" + ele.BName + "</option>";
@@ -263,7 +263,7 @@
                     $("#selPlanTask").html(JsonToCboList("Name", "Value", "", { 'SelectType': 'SELECT' }));
                     break;
                 default:
-                    fn_BindBranchType(_orgb,'ALL');
+                    fn_BindBranchType(_orgb, 'ALL');
                     //$("#selBranchType").html(JsonToCboList("BName", "BId", _orgb, { 'SelectType': 'ALL' }));
                     $("#selReport").html(JsonToCboList("EName", "EId", [], { 'SelectType': 'ALL' }));
                     $("#selRegion").html(JsonToCboList("QName", "QId", [], { 'SelectType': 'ALL' }));
@@ -288,13 +288,13 @@
                                              $.sa.warning("客服区域巡检中:道路救援响应率、召回完成率系统权重为0%,总部统一打分，现场巡检总分为79分");
                                          } else if (vt == 'A') {
                                              var bizId = $("#selBranchType option:selected").attr("tag");
-                                            var bizTypelogin = "@Context.Request.Cookies[SessionKeys.SESSION_ORGBIZTYPE]";
-                                            if (bizTypelogin == "S" || bizId == "S") {
-                                                $.sa.warning("销售明检体系检核总得分为 77分");
-                                            }
-                                            else if(bizId=="A"){
-                                                $.sa.warning("客户服务明检体系检核中：培训管理系统权重为0%，总部统一打分，现场检核总分为 98分");
-                                            }
+                                             var bizTypelogin = "@Context.Request.Cookies[SessionKeys.SESSION_ORGBIZTYPE]";
+                                             if (bizTypelogin == "S" || bizId == "S") {
+                                                 $.sa.warning("销售明检体系检核总得分为 77分");
+                                             }
+                                             else if (bizId == "A") {
+                                                 $.sa.warning("客户服务明检体系检核中：培训管理系统权重为0%，总部统一打分，现场检核总分为 98分");
+                                             }
                                          }
                                      }
                                      else {
@@ -339,7 +339,7 @@
                                } else {
                                    $("#divB").addClass("hidden");
                                }
-                               if (eGridData.length != 0 && eGridData[0].DisId !="") {
+                               if (eGridData.length != 0 && eGridData[0].DisId != "") {
                                    fn_SetGridE(eGridData);
                                    $("#divE").removeClass("hidden");
                                } else {
@@ -374,7 +374,7 @@
     </script>
     <!--SearchDtl-->
     <script type="text/javascript">
-        function fn_SearchDtl(tcid,tcTitle) {
+        function fn_SearchDtl(tcid, tcTitle) {
             var data = $.map(_resultList, function (obj) { if (obj.TCId == tcid) return obj.SDisList; })
             if (data == null || data.length == 0) {
                 $.sa.warning("没有查询到数据！");
@@ -391,7 +391,7 @@
                 tData.push(parseFloat(data[j].STScore));
             }
             series.push({
-                name: tcTitle+'模块得分',
+                name: tcTitle + '模块得分',
                 data: yData,
                 showInLegend: true
             });
@@ -429,7 +429,7 @@
                         }
                     },
                     {
-                        name: 'TCWeight', label: '权重', width:80, align: 'right',
+                        name: 'TCWeight', label: '权重', width: 80, align: 'right',
                         cellattr: function (rowId, val, rawObject, cm, rdata) {
                             return 'class="readonlycell"';
                         }
@@ -805,7 +805,7 @@
                 },
                 title: {
                     text: '小区内经销商得分',
-                    margin:50
+                    margin: 50
                 },
                 credits: {
                     enabled: false// 去掉官网链接
@@ -901,10 +901,9 @@
             if (fn_exportAllDataValidate())
                 GetAllExcelData();
         });
-        
+
     </script>
     <!--ExcelDownloadA-->
-    
     <!--ExcelDownloadR-->
     <script type="text/javascript">
         //区域报告  下载
@@ -1044,12 +1043,12 @@
             excelData.push(head);
             $.each(_rExcelData.RAPList, function (x, o) {
                 var obj = {
-                    "SeqNo": x+1,
+                    "SeqNo": x + 1,
                     "DisName": o.DisName,
                     "DisTCount": o.DisTCount,
                     "DisCCount": o.DisCCount,
                     "DisNCount": o.DisNCount,
-                    "DisProgress":o.DisProgress,
+                    "DisProgress": o.DisProgress,
                     //"DisTScore": o.DisTScore,
                     "DType": o.DType,
                 };
@@ -1178,8 +1177,8 @@
                     return { TCTitle: x.TCTitle, TCId: x.TCId };
                 });
                 _thead = thead.unique_o();
-                //thead.unshift("序号", "区域名称", "区域类型", "总得分");   
-              
+                //thead.unshift("序号", "区域名称", "区域类型", "总得分");
+
                 var th = $.map(_thead, function (x, o) { return x.TCTitle; });
                 th.unshift("序号", "区域名称", "区域类型", "总得分");
                 arryList.push(th);
@@ -1197,7 +1196,7 @@
 
                 });
             }
-           
+
             return arryList;
 
         }
@@ -1234,24 +1233,24 @@
         function FormatEDataThirdR_o() {
             var arryList = [];
 
-            var th=$.map(_thead, function (x, o) { return x.TCTitle; });
+            var th = $.map(_thead, function (x, o) { return x.TCTitle; });
             th.unshift("序号", "经销商名称", "经销商代码", "总得分");
             arryList.push(th);
 
             _mcount = th.length;
 
             //经销商
-            var allDis = $.map(_rExcelData.STCList, function (item, y) {return item;});
+            var allDis = $.map(_rExcelData.STCList, function (item, y) { return item; });
             var disList = allDis.unique();
 
             var aList = _rExcelData.RAPList;
-            if(aList.length>1)aList.shift();
+            if (aList.length > 1) aList.shift();
             $.each(aList, function (x, obj) {
                 if (obj == undefined || obj == null) return true;
                 arryList.push(obj.DisName);
                 $.each(disList, function (y, dis) {
                     var sList = $.map(_thead, function (tc, z) {
-                        var t= $.map(_rExcelData.STCList, function (item, j) {
+                        var t = $.map(_rExcelData.STCList, function (item, j) {
                             if (item.AreaId == obj.DisId && item.SDisId == dis.SDisId && item.TCId == tc.TCId)
                                 return item;
                         });
@@ -1325,7 +1324,7 @@
                 return { TCTitle: x.TCTitle, TCId: x.TCId };
             });
             _thead = thead.unique_o();
-            
+
             var th = $.map(_thead, function (x, o) { return x.TCTitle; });
             th.unshift("序号", "经销商名称", "经销商代码", "总得分");
             arryList.push(th);
@@ -1374,27 +1373,29 @@
 
         //下载全部数据的报告
         function GetAllExcelData() {
-            $.sa.get("http://101.201.221.141:8005/fiat/api/v1/Report/GetAllDataByDisIdForExcel/"+ $.trim($("#selPlanTask").val()),
-                //GetAllDataByDisIdForExcel,
-           {},
-                    {
-                        "success": function (data) {
-                            if (data.resultCode == 0) {
-                                _rExcelData = JSON.parse(data.body);
-                                if (_rExcelData.RATCList == undefined || _rExcelData.RATCList == null || _rExcelData.RATCList.length == 0)
-                                    $.sa.warning("没有可下载的数据", {
-                                        title: "警告！", fnClose: function () {
-                                            $("#btnSearch").focus();
-                                        }
-                                    });
-                                else
-                                    ExcelDownloadAll();
-                            }
-                        },
-                        "failure": function (data, statusText, jqXHR) {
-                            $.sa.warning(data.msg);
-                        }
-                    }, $("body"));           
+
+            $.sa.get(
+                //"http://101.201.221.141:8005/fiat/api/v1/Report/GetAllDataByDisIdForExcel/"+ $.trim($("#selPlanTask").val()),
+                GetAllDataByDisIdForExcel,
+           { batchId: $.trim($("#selPlanTask").val()) },
+            {
+                "success": function (data) {
+                    if (data.resultCode == 0) {
+                        _rExcelData = JSON.parse(data.body);
+                        if (_rExcelData.RATCList == undefined || _rExcelData.RATCList == null || _rExcelData.RATCList.length == 0)
+                            $.sa.warning("没有可下载的数据", {
+                                title: "警告！", fnClose: function () {
+                                    $("#btnSearch").focus();
+                                }
+                            });
+                        else
+                            ExcelDownloadAll();
+                    }
+                },
+                "failure": function (data, statusText, jqXHR) {
+                    $.sa.warning(data.msg);
+                }
+            }, $("body"));
 
             //$.ajax({
             //    type: "POST",
@@ -1474,7 +1475,7 @@
                         $("#selRegion").focus();
                     }
                 });
-            }  else if (!isValiE) {
+            } else if (!isValiE) {
                 $.sa.warning("请选择巡检月份", {
                     title: "警告！", fnClose: function () {
                         $("#selPlanTask").focus();
@@ -1586,8 +1587,8 @@
                 <span class="fa fa-search gap-icon"></span>查询
             </button>
             @*<button class="btn btn-primary hidden-xs" id="btnExcelDownloadA">
-                <span class="fa fa-file-excel-o gap-icon"></span>Excel导出(小区)
-            </button>*@
+                    <span class="fa fa-file-excel-o gap-icon"></span>Excel导出(小区)
+                </button>*@
             <button class="btn btn-primary hidden-xs" id="btnExcelDownloadR">
                 <span class="fa fa-file-excel-o gap-icon"></span>Excel导出
             </button>
