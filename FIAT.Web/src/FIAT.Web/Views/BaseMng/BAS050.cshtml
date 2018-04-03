@@ -115,13 +115,13 @@
                 this.Id = '0';
                 this.Type='E';
                 this.ParentId = $("#selBusLst").val();
+                this.InDateTime=new Date().Format('yyyy-MM-dd hh:mm:ss');
                 delete this.id;
                 delete this.rn;
             });
             var param = { XmlData: editData, UserId: '@Context.Request.Cookies[SessionKeys.SESSION_USERID]' };
             $.sa.post(
-                //"http://localhost:5000/fiat/api/v1/Users/SaveDistributorInfo2",
-             SAVEDISTRIBUTORINFO2,
+                SAVEDISTRIBUTORINFO2,
                 JSON.stringify(param),
                      {
                          "success": function (data) {

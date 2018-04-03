@@ -130,12 +130,13 @@
                 this.Id = '0';
                 this.Type='R';
                 this.ParentId = $("#selRepLst").val();
+                this.InDateTime=new Date().Format('yyyy-MM-dd hh:mm:ss');
                 delete this.id;
-                delete this.rn;
+                delete this.rn;                
             });
             var param = { XmlData: editData, UserId: '@Context.Request.Cookies[SessionKeys.SESSION_USERID]' };
             $.sa.post(
-             SAVEDISTRIBUTORINFO2,
+                SAVEDISTRIBUTORINFO2,
                 JSON.stringify(param),
                      {
                          "success": function (data) {
