@@ -251,9 +251,11 @@
             var selType =$("#selVisitType").val();
             if(selType == "D" || selType == "E" || selType == "F"){
                 var popHeight = 250;
-                var popWidth = 550;
+                var popWidth = 450;
                 $.sa.pop('/Tour/SetSales', {
-                    height: popHeight, width: popWidth, title: '<span class="fa fa-hand-o-right gap-icon-right"></span><span>人员设置</span>',
+                    height: popHeight,
+                    width: popWidth, 
+                    title: '<span class="fa fa-hand-o-right gap-icon-right"></span><span>人员设置</span>',
                     params: {
                         batch:$("#selPlanLst").val(),
                         disId:_disId,
