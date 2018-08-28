@@ -251,7 +251,7 @@
             var selType =$("#selVisitType").val();
             if(selType == "D" || selType == "E" || selType == "F"){
                 var popHeight = 250;
-                var popWidth = 450;
+                var popWidth = 400;
                 $.sa.pop('/Tour/SetSales', {
                     height: popHeight,
                     width: popWidth, 
@@ -660,7 +660,7 @@
         function fn_GridInit() {
             _grid.jqGrid({
                 datatype: 'local',
-                width:540,
+                //width:540,
                 colModel: [
                         {
                             name: 'TCCode', label: "任务代码", width: 200, align: 'center',
@@ -698,7 +698,7 @@
                             }
                         },
                         {
-                            name: 'TCTitle', label: "模块简介", align: 'left',
+                            name: 'TCTitle', label: "模块简介",width:160, align: 'left',
                             cellattr: function (rowId, val, rawObject, cm, rdata) {
                                 return 'class="readonlycell"';
                             }
@@ -736,11 +736,11 @@
                         }
 
                 ],
-                autowidth:true,
-                shrinkToFit:true,
+                width: '300px',
+                shrinkToFit:false,
                 height: 'auto',
                 rownumbers: true,
-                multiselect: true,
+               // multiselect: true,
                 rownumWidth: 40,
                 rowNum: 10,
                 rowList: [10, 20, 30],
@@ -790,7 +790,7 @@
         function fn_GridInit2() {
             _grid2.jqGrid({
                 datatype: 'local',
-                width:460,
+                //width:460,
                 colModel: [
                         {
                             name: 'SeqNo', label: "执行顺序", width: 80, align: 'center',hidden:true,
@@ -803,13 +803,13 @@
                             formatter: fn_ScoreReg, unformat: fn_UnScoreReg
                         },
                         {
-                            name: 'Title', label: "指标名称",width:190, align: 'left',
+                            name: 'Title', label: "指标名称",width:142, align: 'left',
                             cellattr: function (rowId, val, rawObject, cm, rdata) {
                                 return 'class="readonlycell"';
                             }
                         },
                         {
-                            name: 'TIWeight', label: '权重', width: 50, align: 'right',
+                            name: 'TIWeight', label: '权重', width: 60, align: 'right',
                             cellattr: function (rowId, val, rawObject, cm, rdata) {
                                 return 'class="readonlycell"';
                             }, formatter: function (cellvalue, options, rowObject) {
@@ -817,7 +817,7 @@
                             }
                         },
                         {
-                            name: 'PassYN', label: '是否达标', width: 65, align: 'center', editable: false,
+                            name: 'PassYN', label: '是否达标', width: 63, align: 'center', editable: false,
                             cellattr: function (rowId, val, rawObject, cm, rdata) {
                                 return 'class="readonlycell"';
                             }
@@ -863,8 +863,8 @@
                             name: 'TIId', label: 'TIId', width: 50, align: 'center', editable: false, hidden: true
                         }
                 ],
-                autowidth:true,
-                shrinkToFit:true,
+                width:'300px',
+                shrinkToFit:false,
                 height: 'auto',
                 rownumbers: true,
                 rownumWidth: 40,
