@@ -129,6 +129,21 @@ namespace FIAT.Web.Common
                 return Configuration["Data:APIBASEURL"];
             }
         }
+        public string GetAPIBaseUrl_BAK
+        {
+            get
+            {
+                return Configuration["Data:APIBASEURL_BAK"];
+            }
+        }
+
+        public string SMS_Service
+        {
+            get
+            {
+                return Configuration["SMS:URL"];
+            }
+        }
 
         public string GetExcelAPIBaseUrl
         {

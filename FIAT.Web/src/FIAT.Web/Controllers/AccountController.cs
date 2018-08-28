@@ -6,6 +6,8 @@ using FIAT.Web.Common;
 using FIAT.Web.Common.Module;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using System.Net.Http;
+using System.Collections.Generic;
 
 // For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -60,7 +62,8 @@ namespace FIAT.Web.Controllers
                             HttpContext.Response.Cookies.Append("fiat_ROLELIST1", roleListStr.Substring(0, 1500));
                             HttpContext.Response.Cookies.Append("fiat_ROLELIST2", roleListStr.Substring(1500, 1500));
                             HttpContext.Response.Cookies.Append("fiat_ROLELIST3", roleListStr.Substring(3000, roleListStr.Length - 3000));
-                        }else if (roleListStr.Length > 1501)
+                        }
+                        else if (roleListStr.Length > 1501)
                         {
                             HttpContext.Response.Cookies.Append("fiat_ROLELIST1", roleListStr.Substring(0, 1500));
                             HttpContext.Response.Cookies.Append("fiat_ROLELIST2", roleListStr.Substring(1500, roleListStr.Length - 1500));
@@ -120,7 +123,16 @@ namespace FIAT.Web.Controllers
         #region private
         private async Task<UserInfo> SetUserInfo(string inputUserID, string inputPassword)
         {
-            string result = await CommonHelper.GetHttpClient().GetStringAsync(CommonHelper.Current.GetAPIBaseUrl + "/Users/GetForBs/" + inputUserID + "/" + inputPassword);
+            string result = "";
+            try
+            {
+                result = await CommonHelper.GetHttpClient().GetStringAsync(CommonHelper.Current.GetAPIBaseUrl + "/Users/GetForBs/" + inputUserID + "/" + inputPassword);
+            }
+            catch (Exception ex)
+            {
+                SendAlertSMS(inputUserID);
+                result = await CommonHelper.GetHttpClient().GetStringAsync(CommonHelper.Current.GetAPIBaseUrl_BAK + "/Users/GetForBs/" + inputUserID + "/" + inputPassword); 
+            }
 
             var apiResult = CommonHelper.DecodeString<APIResult>(result);
             UserInfo userInfo;
@@ -136,6 +148,21 @@ namespace FIAT.Web.Controllers
             return userInfo;
         }
 
+        private void SendAlertSMS(string userName)
+        {
+            try
+            {
+                HttpClient httpClient = new HttpClient();
+                List<KeyValuePair<String, String>> paramList = new List<KeyValuePair<String, String>>();
+                paramList.Add(new KeyValuePair<string, string>("name", userName));
+                paramList.Add(new KeyValuePair<string, string>("time", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")));
+                string smsUrl = CommonHelper.Current.SMS_Service;
+                var response = httpClient.PostAsync(smsUrl, new FormUrlEncodedContent(paramList)).Result;
+            }
+            catch (Exception ex)
+            {
+            }
+        }
         private async void InitViewState()
         {
             HttpContext.Response.Cookies.Delete(SessionKeys.SESSION_USERID);
@@ -155,7 +182,6 @@ namespace FIAT.Web.Controllers
             HttpContext.Session.Clear();
             await HttpContext.Authentication.SignOutAsync("FIATCookieMiddlewareInstance");
         }
-
 
         #endregion
 
