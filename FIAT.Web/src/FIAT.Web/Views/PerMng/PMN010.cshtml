@@ -923,13 +923,17 @@
                 $("#btnDelete").removeClass("hidden");
             }
             var userType = '@Context.Request.Cookies[SessionKeys.SESSION_USERTYPE]'
-            //if (userType == "A") {
-            //    $("#btnTempDown").removeClass("hidden");
-            //    $("#btnUpload").removeClass("hidden");
-            //} else {
-            //    $("#btnTempDown").addClass("hidden");
-            //    $("#btnUpload").addClass("hidden");
-            //}
+            if (userType == "A") {
+                //$("#btnTempDown").removeClass("hidden");
+                //$("#btnUpload").removeClass("hidden");
+                // 上面内容是系统之前就有的，不知道原因
+                $("#btnExportAll").removeClass("hidden");
+            } else {
+                //$("#btnTempDown").addClass("hidden");
+                //$("#btnUpload").addClass("hidden");
+                // 上面内容是系统之前就有的，不知道原因
+                $("#btnExportAll").addClass("hidden");
+            }
             if (userType == 'Z') {
                 $("#btnStartCheck").removeClass("hidden");
                 $("#btnCommit").removeClass("hidden");
@@ -1508,7 +1512,7 @@
             <button id="btnExportZone" class="btn btn-primary hidden-xs">
                 <span class="fa fa-file-excel-o gap-icon"></span>小区报告
             </button>
-            <button id="btnExportAll" class="btn btn-primary hidden-xs">
+            <button id="btnExportAll" class="btn btn-primary hidden">
                 <span class="fa fa-file-excel-o gap-icon"></span>全国人员信息导出
             </button>
             <button class="btn btn-primary" id="btnSearch">
