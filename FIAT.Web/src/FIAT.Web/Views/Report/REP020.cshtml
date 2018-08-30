@@ -55,8 +55,12 @@
             fn_GetOrgs();
         }
         function fn_InitControlRole() {
-            //if (_userType == "Z")
-            //    $('#btnExcelDownloadR').hide();
+            if (_userType == "A")
+                $('#btnExcelDownloadAll').removeClass("hidden");
+            else
+            {
+                $('#btnExcelDownloadAll').addClass("hidden");
+            }
             if (_userType == "E") {
                 $("#divB").hide();
             } else if (_userType == "R") {
@@ -1592,7 +1596,7 @@
             <button class="btn btn-primary hidden-xs" id="btnExcelDownloadR">
                 <span class="fa fa-file-excel-o gap-icon"></span>Excel导出
             </button>
-            <button class="btn btn-primary hidden-xs" id="btnExcelDownloadAll">
+            <button class="btn btn-primary hidden" id="btnExcelDownloadAll">
                 <span class="fa fa-file-excel-o gap-icon"></span>导出全部区域报告
             </button>
         </div>
