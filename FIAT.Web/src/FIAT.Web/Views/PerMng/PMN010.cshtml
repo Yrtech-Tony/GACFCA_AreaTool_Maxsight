@@ -1407,12 +1407,12 @@
             var myCity = new BMap.LocalCity();
             myCity.get(getCityByIP);
 
-            //获取GPS坐标
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(showMap, handleError, { enableHighAccuracy: true, maximumAge: 1000 });
-            } else {
-                alert("您的浏览器不支持使用HTML 5来获取地理位置服务");
-            }
+            //获取GPS坐标 -- 定位报错，查看代码发现未使用到 牟俊生 2018-10-17 
+            //if (navigator.geolocation) {
+            //    navigator.geolocation.getCurrentPosition(showMap, handleError, { enableHighAccuracy: true, maximumAge: 1000 });
+            //} else {
+            //    alert("您的浏览器不支持使用HTML 5来获取地理位置服务");
+            //}
         }
 
         function showMap(value) {
