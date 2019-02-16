@@ -1,10 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace FIAT.Web.Common.Module
 {
-    public class UserInfo
+    public class UserRoleDto
     {
+        public UserRoleDto()
+        {
+            RoleList = new List<RoleDto>();
+            ZionList = new List<ZionDto>();
+            DepartmentList = new List<DepartmentDto>();
+        }
         public string UserId { get; set; }
         public string UserName { get; set; }
         public string Name { get; set; }
@@ -26,12 +31,11 @@ namespace FIAT.Web.Common.Module
         public string OrgServerId { get; set; }
         public string OrgDepartmentName { get; set; }
         public string OrgDepartmentId { get; set; }
-        public DateTime LoggedInAt { get; set; }
-        public List<RoleInfo> RoleList { get; set; }
+        public List<RoleDto> RoleList { get; set; }
         public List<ZionDto> ZionList { get; set; }
         public List<DepartmentDto> DepartmentList { get; set; }
     }
-    public class RoleInfo
+    public class RoleDto
     {
         public int DisplaySeq { get; set; }
         public int? ParentId { get; set; }
@@ -40,41 +44,5 @@ namespace FIAT.Web.Common.Module
         public string Controller { get; set; }
         public string Action { get; set; }
         public string AppYN { get; set; }
-    }
-    public class ZionDto
-    {
-        public ZionDto()
-        {
-            AreaList = new List<AreaDto>();
-        }
-        public string QId { get; set; }
-        public string QCode { get; set; }
-        public string QName { get; set; }
-        public string EId { get; set; }
-        public List<AreaDto> AreaList { get; set; }
-    }
-    public class AreaDto
-    {
-        public AreaDto()
-        {
-            ServerList = new List<ServerDto>();
-        }
-        public string AId { get; set; }
-        public string ACode { get; set; }
-        public string AName { get; set; }
-        public string QId { get; set; }
-        public List<ServerDto> ServerList { get; set; }
-    }
-    public class ServerDto
-    {
-        public string SId { get; set; }
-        public string SCode { get; set; }
-        public string SName { get; set; }
-        public string AId { get; set; }
-    }
-    public class DepartmentDto
-    {
-        public string DId { get; set; }
-        public string DName { get; set; }
     }
 }
