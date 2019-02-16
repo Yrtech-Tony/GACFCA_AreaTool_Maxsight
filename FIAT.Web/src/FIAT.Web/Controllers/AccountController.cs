@@ -55,6 +55,7 @@ namespace FIAT.Web.Controllers
                 else
                 {
                     log.Info("查询用户....");
+                    log.Info("数据库连接****" + Context.DapperContext.Current.SqlConnection);
                     UserInfo userinfo = await SetUserInfo(inputUserID, inputPassword);
                     
                     if (userinfo != null && userinfo.UserId != "0")
@@ -139,7 +140,6 @@ namespace FIAT.Web.Controllers
         private async Task<UserInfo> SetUserInfo(string inputUserID, string inputPassword)
         {
             UsersService _usersService = new UsersService();
-            log.Info("数据库连接****" + Context.DapperContext.Current.SqlConnection);
             return await _usersService.LoginForBs(inputUserID, inputPassword);
         }
 
