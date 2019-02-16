@@ -10,6 +10,7 @@ using log4net.Repository;
 using log4net;
 using log4net.Config;
 using System.IO;
+using FIAT.Web.Context;
 
 namespace FIAT.Web
 {
@@ -26,6 +27,7 @@ namespace FIAT.Web
                 .AddEnvironmentVariables();
             //Configuration = builder.Build();
             CommonHelper.Current.Configuration = builder.Build();
+            DapperContext.Current.Configuration = CommonHelper.Current.Configuration;
             //log4net
             repository = LogManager.CreateRepository("NETCoreRepository");
             //指定配置文件
