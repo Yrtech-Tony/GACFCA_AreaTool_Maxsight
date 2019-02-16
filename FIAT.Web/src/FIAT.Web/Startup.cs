@@ -6,11 +6,17 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using FIAT.Web.Common;
 using System;
+using log4net.Repository;
+using log4net;
+using log4net.Config;
+using System.IO;
 
 namespace FIAT.Web
 {
     public class Startup
     {
+        //为StartUp.cs添加属性
+  public static ILoggerRepository repository { get; set; }
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
@@ -20,6 +26,10 @@ namespace FIAT.Web
                 .AddEnvironmentVariables();
             //Configuration = builder.Build();
             CommonHelper.Current.Configuration = builder.Build();
+            //log4net
+            repository = LogManager.CreateRepository("NETCoreRepository");
+            //指定配置文件
+            XmlConfigurator.Configure(repository, new FileInfo("log4net.config"));
         }
 
         public IConfigurationRoot Configuration { get; }

@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Authorization;
 using System.Net.Http;
 using System.Collections.Generic;
 using FIAT.Web.Service;
+using log4net;
+using Microsoft.AspNetCore.Hosting;
 
 // For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -16,6 +18,14 @@ namespace FIAT.Web.Controllers
 {
     public class AccountController : Controller
     {
+        //log4Net
+        private ILog log;
+        public AccountController(IHostingEnvironment hostingEnv)
+        {
+            //log4Net
+            this.log = LogManager.GetLogger(Startup.repository.Name, typeof(AccountController));
+        }
+
         // GET: /<controller>/
         public IActionResult Login()
         {
@@ -24,7 +34,6 @@ namespace FIAT.Web.Controllers
             //{
             //    return Redirect("/Home/Index");
             //}
-
             return View();
         }
 
@@ -33,6 +42,7 @@ namespace FIAT.Web.Controllers
         {
             try
             {
+                log.Info("登录开始....");
                 HttpContext.Session.Clear();
                 if (string.IsNullOrWhiteSpace(inputUserID))
                 {
@@ -44,9 +54,12 @@ namespace FIAT.Web.Controllers
                 }
                 else
                 {
+                    log.Info("查询用户....");
                     UserInfo userinfo = await SetUserInfo(inputUserID, inputPassword);
+                    
                     if (userinfo != null && userinfo.UserId != "0")
                     {
+                        log.Info("查询用户成功...." + userinfo.RoleList[0].Name);
                         ClaimsIdentity ci = new ClaimsIdentity("FIATCookieMiddlewareInstance");
                         ci.AddClaim(new Claim(ClaimTypes.Name, userinfo.UserId));
                         //ci.AddClaim(new Claim(ClaimTypes.UserData, Newtonsoft.Json.JsonConvert.SerializeObject(userinfo.RoleList)));
@@ -100,6 +113,7 @@ namespace FIAT.Web.Controllers
             catch (Exception ex)
             {
                 ViewBag.ErrorLoginMessage = "未查询到用户信息,请重试。";
+                log.Error("登录失败！！",ex);
                 Login();
             }
             return View();
@@ -124,16 +138,8 @@ namespace FIAT.Web.Controllers
         #region private
         private async Task<UserInfo> SetUserInfo(string inputUserID, string inputPassword)
         {
-            try
-            {
-                UsersService _usersService = new UsersService();
-                return await _usersService.LoginForBs(inputUserID, inputPassword);                
-            }
-            catch (Exception ex)
-            {
-                return null;
-            }           
-            
+            UsersService _usersService = new UsersService();
+            return await _usersService.LoginForBs(inputUserID, inputPassword);
         }
 
         //private async Task<UserInfo> SetUserInfo(string inputUserID, string inputPassword)

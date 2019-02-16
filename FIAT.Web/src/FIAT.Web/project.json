@@ -28,7 +28,8 @@
     "Savorboard.NPOI.Core.Ooxml": "1.1.1",
     "System.Xml.ReaderWriter": "4.3.0",
     "System.Data.SqlClient": "4.6.0",
-    "Dapper": "1.50.7"
+    "Dapper": "1.50.7",
+    "log4net": "2.0.8"
   },
 
   "tools": {
