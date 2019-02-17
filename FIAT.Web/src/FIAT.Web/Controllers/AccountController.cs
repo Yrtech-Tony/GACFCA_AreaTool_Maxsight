@@ -137,38 +137,40 @@ namespace FIAT.Web.Controllers
         }
 
         #region private
+        //private async Task<UserInfo> SetUserInfo(string inputUserID, string inputPassword)
+        //{
+        //    UsersService _usersService = new UsersService();
+        //    return await _usersService.LoginForBs(inputUserID, inputPassword);
+        //}
+
         private async Task<UserInfo> SetUserInfo(string inputUserID, string inputPassword)
         {
             UsersService _usersService = new UsersService();
-            return await _usersService.LoginForBs(inputUserID, inputPassword);
+            string result = "";
+            try
+            {
+                result = _usersService.LoginForBs(inputUserID, inputPassword);
+                //result = await CommonHelper.GetHttpClient().GetStringAsync(CommonHelper.Current.GetAPIBaseUrl + "/Users/GetForBs/" + inputUserID + "/" + inputPassword);
+            }
+            catch (Exception ex)
+            {
+                SendAlertSMS(inputUserID);
+                result = await CommonHelper.GetHttpClient().GetStringAsync(CommonHelper.Current.GetAPIBaseUrl_BAK + "/Users/GetForBs/" + inputUserID + "/" + inputPassword);
+            }
+
+            var apiResult = CommonHelper.DecodeString<APIResult>(result);
+            UserInfo userInfo;
+
+            if (apiResult.ResultCode == ResultType.Success)
+            {
+                userInfo = CommonHelper.DecodeString<UserInfo>(apiResult.Body);
+            }
+            else
+            {
+                userInfo = null;
+            }
+            return userInfo;
         }
-
-        //private async Task<UserInfo> SetUserInfo(string inputUserID, string inputPassword)
-        //{
-        //    string result = "";
-        //    try
-        //    {
-        //        result = await CommonHelper.GetHttpClient().GetStringAsync(CommonHelper.Current.GetAPIBaseUrl + "/Users/GetForBs/" + inputUserID + "/" + inputPassword);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        SendAlertSMS(inputUserID);
-        //        result = await CommonHelper.GetHttpClient().GetStringAsync(CommonHelper.Current.GetAPIBaseUrl_BAK + "/Users/GetForBs/" + inputUserID + "/" + inputPassword); 
-        //    }
-
-        //    var apiResult = CommonHelper.DecodeString<APIResult>(result);
-        //    UserInfo userInfo;
-
-        //    if (apiResult.ResultCode == ResultType.Success)
-        //    {
-        //        userInfo = CommonHelper.DecodeString<UserInfo>(apiResult.Body);
-        //    }
-        //    else
-        //    {
-        //        userInfo = null;
-        //    }
-        //    return userInfo;
-        //}
 
         private void SendAlertSMS(string userName)
         {
