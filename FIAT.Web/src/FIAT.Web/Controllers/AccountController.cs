@@ -137,10 +137,25 @@ namespace FIAT.Web.Controllers
         }
 
         #region private
+
         private async Task<UserInfo> SetUserInfo(string inputUserID, string inputPassword)
         {
             UsersService _usersService = new UsersService();
-            return await _usersService.LoginForBs(inputUserID, inputPassword);
+            var apiResult = await _usersService.LoginForBs(inputUserID, inputPassword);
+            string result = CommonHelper.EncodeDto<APIResult>(apiResult);
+            log.Info("查询结果...." + result);
+
+            UserInfo userInfo;
+
+            if (apiResult.ResultCode == ResultType.Success)
+            {
+                userInfo = CommonHelper.DecodeString<UserInfo>(apiResult.Body);
+            }
+            else
+            {
+                userInfo = null;
+            }
+            return userInfo;
         }
 
         //private async Task<UserInfo> SetUserInfo(string inputUserID, string inputPassword)
