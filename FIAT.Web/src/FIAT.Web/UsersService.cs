@@ -29,8 +29,8 @@ namespace FIAT.Web.Service
             using (var conn = new SqlConnection(DapperContext.Current.SqlConnection))
             {
                 conn.Open();
-                try
-                {
+                //try
+                //{
                     var userManys = await conn.QueryMultipleAsync(spName, param: dp, commandType: System.Data.CommandType.StoredProcedure);
                     UserInfo userDto = userManys.ReadFirst<UserInfo>();
                     var bizList = userManys.Read<BizDto>();
@@ -62,12 +62,12 @@ namespace FIAT.Web.Service
                     userDto.DepartmentList.AddRange(departmentList);
 
                     
-                    return userDto;
-                }
-                catch (Exception ex)
-                {
-                    return null;
-                }
+                    return userDto;                                     
+                //}
+                //catch (Exception ex)
+                //{
+                //    return null;
+                //}
             }
         }
 
@@ -77,12 +77,13 @@ namespace FIAT.Web.Service
             DynamicParameters dp = new DynamicParameters();
             dp.Add("@UserName", UserName);
             dp.Add("@Password", Password);
-
+            
             using (var conn = new SqlConnection(DapperContext.Current.SqlConnection))
             {
+
                 conn.Open();
-                try
-                {
+                //try
+                //{
                     var userManys = await conn.QueryMultipleAsync(spName, param: dp, commandType: System.Data.CommandType.StoredProcedure);
                     UserInfo userRoleDto = userManys.ReadFirst<UserInfo>();
                     var roleDto = userManys.Read<RoleInfo>();
@@ -103,11 +104,11 @@ namespace FIAT.Web.Service
                     userRoleDto.DepartmentList.AddRange(departmentList);
 
                     return userRoleDto;
-                }
-                catch (Exception ex)
-                {
-                    return null ;
-                }
+                //}
+                //catch (Exception ex)
+                //{
+                //    return null ;
+                //}
             }
         }
     
