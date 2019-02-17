@@ -42,7 +42,7 @@ namespace FIAT.Web.Controllers
         {
             try
             {
-                log.Info("登录开始....");
+               // log.Info("登录开始....");
                 HttpContext.Session.Clear();
                 if (string.IsNullOrWhiteSpace(inputUserID))
                 {
@@ -54,13 +54,13 @@ namespace FIAT.Web.Controllers
                 }
                 else
                 {
-                    log.Info("查询用户....");
-                    log.Info("数据库连接****" + Context.DapperContext.Current.SqlConnection);
+                    //log.Info("查询用户....");
+                    //log.Info("数据库连接****" + Context.DapperContext.Current.SqlConnection);
                     UserInfo userinfo = await SetUserInfo(inputUserID, inputPassword);
                     
                     if (userinfo != null && userinfo.UserId != "0")
                     {
-                        log.Info("查询用户成功...." + userinfo.RoleList[0].Name);
+                        //log.Info("查询用户成功...." + userinfo.RoleList[0].Name);
                         ClaimsIdentity ci = new ClaimsIdentity("FIATCookieMiddlewareInstance");
                         ci.AddClaim(new Claim(ClaimTypes.Name, userinfo.UserId));
                         //ci.AddClaim(new Claim(ClaimTypes.UserData, Newtonsoft.Json.JsonConvert.SerializeObject(userinfo.RoleList)));
@@ -114,7 +114,7 @@ namespace FIAT.Web.Controllers
             catch (Exception ex)
             {
                 ViewBag.ErrorLoginMessage = "未查询到用户信息,请重试。";
-                log.Error("登录失败！！",ex);
+                //log.Error("登录失败！！",ex);
                 Login();
             }
             return View();
@@ -146,19 +146,19 @@ namespace FIAT.Web.Controllers
         private async Task<UserInfo> SetUserInfo(string inputUserID, string inputPassword)
         {
             UsersService _usersService = new UsersService();
-            string result = "";
-            try
-            {
-                result = _usersService.LoginForBs(inputUserID, inputPassword);
-                //result = await CommonHelper.GetHttpClient().GetStringAsync(CommonHelper.Current.GetAPIBaseUrl + "/Users/GetForBs/" + inputUserID + "/" + inputPassword);
-            }
-            catch (Exception ex)
-            {
-                SendAlertSMS(inputUserID);
-                result = await CommonHelper.GetHttpClient().GetStringAsync(CommonHelper.Current.GetAPIBaseUrl_BAK + "/Users/GetForBs/" + inputUserID + "/" + inputPassword);
-            }
+            //string result = "";
+            //try
+            //{
+            //    //result = await _usersService.LoginForBs(inputUserID, inputPassword);
+            //    //result = await CommonHelper.GetHttpClient().GetStringAsync(CommonHelper.Current.GetAPIBaseUrl + "/Users/GetForBs/" + inputUserID + "/" + inputPassword);
+            //}
+            //catch (Exception ex)
+            //{
+            //    SendAlertSMS(inputUserID);
+            //    result = await CommonHelper.GetHttpClient().GetStringAsync(CommonHelper.Current.GetAPIBaseUrl_BAK + "/Users/GetForBs/" + inputUserID + "/" + inputPassword);
+            //}
 
-            var apiResult = CommonHelper.DecodeString<APIResult>(result);
+            var apiResult = await _usersService.LoginForBs(inputUserID, inputPassword); ;
             UserInfo userInfo;
 
             if (apiResult.ResultCode == ResultType.Success)
