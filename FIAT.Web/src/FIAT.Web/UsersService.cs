@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using FIAT.Web.Common.Module;
 using FIAT.Web.Context;
 using FIAT.Web.Common;
+using log4net;
 
 namespace FIAT.Web.Service
 {
@@ -19,55 +20,57 @@ namespace FIAT.Web.Service
     }
     public class UsersService : IUsersService
     {
+        private ILog log;
+        public UsersService()
+        {
+            //log4Net
+            this.log = LogManager.GetLogger(Startup.repository.Name, typeof(UsersService));
+        }
+
         public async Task<UserInfo> Login(string UserName, string Password)
         {
             string spName = @"up_sant_Login_Login_R_01";
             DynamicParameters dp = new DynamicParameters();
             dp.Add("@UserName", UserName);
             dp.Add("@Password", Password);
-
+                        
             using (var conn = new SqlConnection(DapperContext.Current.SqlConnection))
-            {
-                conn.Open();
-                try
-                {
-                    var userManys = await conn.QueryMultipleAsync(spName, param: dp, commandType: System.Data.CommandType.StoredProcedure);
-                    UserInfo userDto = userManys.ReadFirst<UserInfo>();
-                    var bizList = userManys.Read<BizDto>();
-                    var repList = userManys.Read<RepDto>();
-                    var zionList = userManys.Read<ZionDto>();
-                    var areaList = userManys.Read<AreaDto>();
-                    var serverList = userManys.Read<ServerDto>();
-                    var departmentList = userManys.Read<DepartmentDto>();
-                    //var impPlanStatusList = userManys.Read<ImpPlanStatusDto>();
-                    //var impResultStatusList = userManys.Read<ImpResultStatusDto>();
-                    var impStatusList = userManys.Read<ImpStatusDto>();
-                    foreach (var item in areaList)
-                    {
-                        item.ServerList.AddRange(serverList.Where(s => s.AId == item.AId));
-                    }
-                    foreach (var item in zionList)
-                    {
-                        item.AreaList.AddRange(areaList.Where(a => a.QId == item.QId));
-                    }
-                    foreach (var item in repList)
-                    {
-                        item.ZionList.AddRange(zionList.Where(q => q.EId == item.EId));
-                    }
-                    foreach (var item in bizList)
-                    {
-                        item.RepList.AddRange(repList.Where(r => r.BId == item.BId));
-                    }
+            {               
+                conn.Open();                
 
-                    userDto.DepartmentList.AddRange(departmentList);
-
-                    
-                    return userDto;
-                }
-                catch (Exception ex)
+                var userManys = await conn.QueryMultipleAsync(spName, param: dp, commandType: System.Data.CommandType.StoredProcedure);
+                
+                UserInfo userDto = userManys.ReadFirst<UserInfo>();               
+                var bizList = userManys.Read<BizDto>();
+                var repList = userManys.Read<RepDto>();
+                var zionList = userManys.Read<ZionDto>();
+                var areaList = userManys.Read<AreaDto>();
+                var serverList = userManys.Read<ServerDto>();
+                var departmentList = userManys.Read<DepartmentDto>();
+                //var impPlanStatusList = userManys.Read<ImpPlanStatusDto>();
+                //var impResultStatusList = userManys.Read<ImpResultStatusDto>();
+                var impStatusList = userManys.Read<ImpStatusDto>();
+                foreach (var item in areaList)
                 {
-                    return null;
+                    item.ServerList.AddRange(serverList.Where(s => s.AId == item.AId));
                 }
+                foreach (var item in zionList)
+                {
+                    item.AreaList.AddRange(areaList.Where(a => a.QId == item.QId));
+                }
+                foreach (var item in repList)
+                {
+                    item.ZionList.AddRange(zionList.Where(q => q.EId == item.EId));
+                }
+                foreach (var item in bizList)
+                {
+                    item.RepList.AddRange(repList.Where(r => r.BId == item.BId));
+                }
+
+                userDto.DepartmentList.AddRange(departmentList);
+
+
+                return userDto;
             }
         }
 
@@ -77,37 +80,35 @@ namespace FIAT.Web.Service
             DynamicParameters dp = new DynamicParameters();
             dp.Add("@UserName", UserName);
             dp.Add("@Password", Password);
-
+            log.Info("初始化连接....");
             using (var conn = new SqlConnection(DapperContext.Current.SqlConnection))
             {
+                log.Info("初始化连接成功....");
                 conn.Open();
-                try
-                {
-                    var userManys = await conn.QueryMultipleAsync(spName, param: dp, commandType: System.Data.CommandType.StoredProcedure);
-                    UserInfo userRoleDto = userManys.ReadFirst<UserInfo>();
-                    var roleDto = userManys.Read<RoleInfo>();
-                    //var zionList = userManys.Read<ZionDto>();
-                    //var areaList = userManys.Read<AreaDto>();
-                    //var serverList = userManys.Read<ServerDto>();
-                    var departmentList = userManys.Read<DepartmentDto>();
-                    //foreach (var item in areaList)
-                    //{
-                    //    item.ServerList.AddRange(serverList.Where(s => s.AId == item.AId));
-                    //}
-                    //foreach (var item in zionList)
-                    //{
-                    //    item.AreaList.AddRange(areaList.Where(a => a.QId == item.QId));
-                    //}
-                    userRoleDto.RoleList.AddRange(roleDto);
-                    //userRoleDto.ZionList.AddRange(zionList);
-                    userRoleDto.DepartmentList.AddRange(departmentList);
+                log.Info("打开连接成功....");
 
-                    return userRoleDto;
-                }
-                catch (Exception ex)
-                {
-                    return null ;
-                }
+                var userManys = await conn.QueryMultipleAsync(spName, param: dp, commandType: System.Data.CommandType.StoredProcedure);
+                log.Info("查询成功....");
+                UserInfo userRoleDto = userManys.ReadFirst<UserInfo>();
+                log.Info("查询成功，获取到UserInfo=" + userRoleDto.Name);
+                var roleDto = userManys.Read<RoleInfo>();
+                //var zionList = userManys.Read<ZionDto>();
+                //var areaList = userManys.Read<AreaDto>();
+                //var serverList = userManys.Read<ServerDto>();
+                var departmentList = userManys.Read<DepartmentDto>();
+                //foreach (var item in areaList)
+                //{
+                //    item.ServerList.AddRange(serverList.Where(s => s.AId == item.AId));
+                //}
+                //foreach (var item in zionList)
+                //{
+                //    item.AreaList.AddRange(areaList.Where(a => a.QId == item.QId));
+                //}
+                userRoleDto.RoleList.AddRange(roleDto);
+                //userRoleDto.ZionList.AddRange(zionList);
+                userRoleDto.DepartmentList.AddRange(departmentList);
+
+                return userRoleDto;
             }
         }
     
