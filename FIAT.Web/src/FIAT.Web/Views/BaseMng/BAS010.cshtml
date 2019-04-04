@@ -13,7 +13,9 @@
         }
 
         #selZionLst.orgWidth, #selAreaLst.orgWidth,
-        #selServerLst.orgWidth, #selDepartmentLst.orgWidth {
+        #selServerLst.orgWidth
+        /*, #selDepartmentLst.orgWidth*/ 
+        {
             width: 25%;
         }
     </style>
@@ -24,7 +26,7 @@
         var _grid, _gridName;
         $(document).ready(function () {
             zionServerLst = '';
-            departmentLst = '@Context.Request.Cookies[SessionKeys.SESSION_DEPARTMENTLIST]'.replace(/&quot;/g, '"');
+            //departmentLst = '@Context.Request.Cookies[SessionKeys.SESSION_DEPARTMENTLIST]'.replace(/&quot;/g, '"');
 
             fn_Initial();
             fn_InitialData();
@@ -118,7 +120,7 @@
                       $("#selAreaLst").html(JsonToCboList("AName", "AId", null, { 'SelectType': 'All' }));
                       $("#selServerLst").html(JsonToCboList("SName", "SId", null, { 'SelectType': 'All' }));
                       fn_SetRepData();
-                      $("#selDepartmentLst").html(JsonToCboList("DName", "DId", JSON.parse(departmentLst), { 'SelectType': 'All' }));
+                      //$("#selDepartmentLst").html(JsonToCboList("DName", "DId", JSON.parse(departmentLst), { 'SelectType': 'All' }));
                       fn_SetOrgControlStatus();
                   },
                   "failure": function (data, statusText, jqXHR) {
@@ -218,7 +220,7 @@
             $("#selZionLst").val("0");
             $("#selAreaLst").val("0");
             $("#selServerLst").val("0");
-            $("#selDepartmentLst").val("0");
+            //$("#selDepartmentLst").val("0");
             if (loginUserType == 'A') {
                 if (userType == "A") {
                     $("#selBizList").attr("disabled", "disabled");
@@ -226,49 +228,49 @@
                     $("#selZionLst").attr("disabled", "disabled");
                     $("#selAreaLst").attr("disabled", "disabled");
                     $("#selServerLst").attr("disabled", "disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else if (userType == "B") {
                     $("#selBizList").removeAttr("disabled");
                     $("#selRepList").attr("disabled", "disabled");
                     $("#selZionLst").attr("disabled", "disabled");
                     $("#selAreaLst").attr("disabled", "disabled");
                     $("#selServerLst").attr("disabled", "disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else if (userType == "E") {
                     $("#selBizList").removeAttr("disabled");
                     $("#selRepList").removeAttr("disabled");
                     $("#selZionLst").attr("disabled", "disabled");
                     $("#selAreaLst").attr("disabled", "disabled");
                     $("#selServerLst").attr("disabled", "disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else if (userType == "R") {
                     $("#selBizList").removeAttr("disabled");
                     $("#selRepList").removeAttr("disabled");
                     $("#selZionLst").removeAttr("disabled");
                     $("#selAreaLst").attr("disabled", "disabled");
                     $("#selServerLst").attr("disabled", "disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else if (userType == "Z") {
                     $("#selBizList").removeAttr("disabled");
                     $("#selRepList").removeAttr("disabled");
                     $("#selZionLst").removeAttr("disabled");
                     $("#selAreaLst").removeAttr("disabled");
                     $("#selServerLst").attr("disabled", "disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else if (userType == "S") {
                     $("#selBizList").removeAttr("disabled");
                     $("#selRepList").removeAttr("disabled");
                     $("#selZionLst").removeAttr("disabled");
                     $("#selAreaLst").removeAttr("disabled");
                     $("#selServerLst").removeAttr("disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else {
                     $("#selBizList").removeAttr("disabled");
                     $("#selRepList").removeAttr("disabled");
                     $("#selZionLst").removeAttr("disabled");
                     $("#selAreaLst").removeAttr("disabled");
                     $("#selServerLst").removeAttr("disabled");
-                    $("#selDepartmentLst").removeAttr("disabled");
+                    //$("#selDepartmentLst").removeAttr("disabled");
                 }
             } else if (loginUserType == 'B') {
                 $("#selBizList").val(OrgBizId);
@@ -279,37 +281,37 @@
                     $("#selZionLst").attr("disabled", "disabled");
                     $("#selAreaLst").attr("disabled", "disabled");
                     $("#selServerLst").attr("disabled", "disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else if (userType == "E") {
                     $("#selRepList").removeAttr("disabled");
                     $("#selZionLst").attr("disabled", "disabled");
                     $("#selAreaLst").attr("disabled", "disabled");
                     $("#selServerLst").attr("disabled", "disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else if (userType == "R") {
                     $("#selRepList").removeAttr("disabled");
                     $("#selZionLst").removeAttr("disabled");
                     $("#selAreaLst").attr("disabled", "disabled");
                     $("#selServerLst").attr("disabled", "disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else if (userType == "Z") {
                     $("#selRepList").removeAttr("disabled");
                     $("#selZionLst").removeAttr("disabled");
                     $("#selAreaLst").removeAttr("disabled");
                     $("#selServerLst").attr("disabled", "disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else if (userType == "S") {
                     $("#selRepList").removeAttr("disabled");
                     $("#selZionLst").removeAttr("disabled");
                     $("#selAreaLst").removeAttr("disabled");
                     $("#selServerLst").removeAttr("disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else {
                     $("#selRepList").removeAttr("disabled");
                     $("#selZionLst").removeAttr("disabled");
                     $("#selAreaLst").removeAttr("disabled");
                     $("#selServerLst").removeAttr("disabled");
-                    $("#selDepartmentLst").removeAttr("disabled");
+                    //$("#selDepartmentLst").removeAttr("disabled");
                 }
             } else if (loginUserType == 'E') {
                 $("#selBizList").val(OrgBizId);
@@ -322,27 +324,27 @@
                     $("#selZionLst").attr("disabled", "disabled");
                     $("#selAreaLst").attr("disabled", "disabled");
                     $("#selServerLst").attr("disabled", "disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else if (userType == "R") {
                     $("#selZionLst").removeAttr("disabled");
                     $("#selAreaLst").attr("disabled", "disabled");
                     $("#selServerLst").attr("disabled", "disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else if (userType == "Z") {
                     $("#selZionLst").removeAttr("disabled");
                     $("#selAreaLst").removeAttr("disabled");
                     $("#selServerLst").attr("disabled", "disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else if (userType == "S") {
                     $("#selZionLst").removeAttr("disabled");
                     $("#selAreaLst").removeAttr("disabled");
                     $("#selServerLst").removeAttr("disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else {
                     $("#selZionLst").removeAttr("disabled");
                     $("#selAreaLst").removeAttr("disabled");
                     $("#selServerLst").removeAttr("disabled");
-                    $("#selDepartmentLst").removeAttr("disabled");
+                    //$("#selDepartmentLst").removeAttr("disabled");
                 }
             } else if (loginUserType == 'R') {
                 $("#selBizList").val(OrgBizId);
@@ -357,19 +359,19 @@
                 if (userType == "R") {
                     $("#selAreaLst").attr("disabled", "disabled");
                     $("#selServerLst").attr("disabled", "disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else if (userType == "Z") {
                     $("#selAreaLst").removeAttr("disabled");
                     $("#selServerLst").attr("disabled", "disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else if (userType == "S") {
                     $("#selAreaLst").removeAttr("disabled");
                     $("#selServerLst").removeAttr("disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else {
                     $("#selAreaLst").removeAttr("disabled");
                     $("#selServerLst").removeAttr("disabled");
-                    $("#selDepartmentLst").removeAttr("disabled");
+                    //$("#selDepartmentLst").removeAttr("disabled");
                 }
             } else if (loginUserType == 'Z') {
                 $("#selBizList").val(OrgBizId);
@@ -386,13 +388,13 @@
                 $("#selAreaLst").attr("disabled", "disabled");
                 if (userType == "Z") {
                     $("#selServerLst").attr("disabled", "disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else if (userType == "S") {
                     $("#selServerLst").removeAttr("disabled");
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else {
                     $("#selServerLst").removeAttr("disabled");
-                    $("#selDepartmentLst").removeAttr("disabled");
+                    //$("#selDepartmentLst").removeAttr("disabled");
                 }
             } else if (loginUserType == 'S') {
                 $("#selBizList").val(OrgBizId);
@@ -410,9 +412,9 @@
                 $("#selAreaLst").attr("disabled", "disabled");
                 $("#selServerLst").attr("disabled", "disabled");
                 if (userType == "S") {
-                    $("#selDepartmentLst").attr("disabled", "disabled");
+                    //$("#selDepartmentLst").attr("disabled", "disabled");
                 } else {
-                    $("#selDepartmentLst").removeAttr("disabled");
+                    //$("#selDepartmentLst").removeAttr("disabled");
                 }
             } else if (loginUserType == 'D') {
                 $("#selBizList").val(OrgBizId);
@@ -424,14 +426,14 @@
                 $("#selAreaLst").val(OrgAreaId);
                 fn_SetServerData();
                 $("#selServerLst").val(OrgServerId);
-                $("#selDepartmentLst").val(OrgDepartmentId);
+                //$("#selDepartmentLst").val(OrgDepartmentId);
                 $("#selBizList").attr("disabled", "disabled");
                 $("#selRepList").attr("disabled", "disabled");
                 $("#selUserType").attr("disabled", "disabled");
                 $("#selZionLst").attr("disabled", "disabled");
                 $("#selAreaLst").attr("disabled", "disabled");
                 $("#selServerLst").attr("disabled", "disabled");
-                $("#selDepartmentLst").attr("disabled", "disabled");
+                //$("#selDepartmentLst").attr("disabled", "disabled");
             }
         }
     </script>
@@ -629,7 +631,7 @@
             } else if ($("#selBizList").val() != '0') {
                 disId = $("#selBizList").val();
             }
-            departmentId = $("#selDepartmentLst").val();
+            //departmentId = $("#selDepartmentLst").val();
             $.sa.get(GETEMPLOYEEINFO, {
                 DisId: disId,
                 DepartId: departmentId,
@@ -667,7 +669,7 @@
 
 <div class="row gap-top">
     <div class="col-md-12">
-        <span class="fa fa-flag fa-lg gap-icon"></span><span class="page-mtitle">基础设置</span><span>&nbsp;>&nbsp;</span>
+        <span class="fa fa-flag fa-lg gap-icon"></span><span class="page-mtitle">基础设置</span><span>&nbsp;&nbsp;</span>
         <span class="page-title">用户管理</span>
         <div class="pull-right">
             <button class="btn btn-primary" id="btnSearch">
@@ -698,7 +700,7 @@
             <select class="form-control orgWidth" id="selZionLst"></select>
             <select class="form-control orgWidth" id="selAreaLst"></select>
             <select class="form-control orgWidth" id="selServerLst"></select>
-            <select class="form-control orgWidth" id="selDepartmentLst"></select>
+            @*<select class="form-control orgWidth" id="selDepartmentLst"></select>*@
         </div>
     </div>
 </div>
